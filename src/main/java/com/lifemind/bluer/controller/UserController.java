@@ -9,6 +9,7 @@ import com.lifemind.bluer.entity.Note;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.entity.User;
 import com.lifemind.bluer.service.impl.UserServiceImpl;
+import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -29,7 +30,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-
     @Autowired
     private UserServiceImpl userService;
 
@@ -81,10 +81,12 @@ public class UserController {
                 check.setLoginTime(LocalDateTime.now());
                 userService.updateById(check);
                 HashMap<String, Object> data = new HashMap<String, Object>();
-                check.setPassword("*");
+                check.setPassword(null);
                 check.setCreateTime(null);
                 check.setLoginTime(null);
+                String token = TokenUtil.generateToken(check);
                 data.put("user", check);
+                data.put("token", token);
                 System.out.println("登录成功");
                 List<Note> menuData = userService.getMenuData(check.getUserId());
                 data.put("menuData", menuData);

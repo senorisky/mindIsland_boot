@@ -21,3 +21,4 @@ mybatis-plus:
 #  type-aliases-package: com.example.pojo
 server:
   port: 8081
+file-save-path: D:\images\LifeMind\

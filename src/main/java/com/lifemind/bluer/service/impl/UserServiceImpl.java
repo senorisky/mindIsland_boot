@@ -27,6 +27,7 @@ import java.util.WeakHashMap;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+
     @Autowired
     private UserMapper userMapper;
 
@@ -47,8 +48,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public boolean regist(User user) {
         try {
-            String id = user.getUserName();
-            user.setUserId(id);
             user.setCreateTime(LocalDateTime.now());
             int i = userMapper.insert(user);
             if (i <= 0) {
@@ -63,8 +62,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public List<Note> getMenuData(String uid) {
-        List<Note> notes = userMapper.selectNotes(uid);
-
+        QueryWrapper wrapper2 = new QueryWrapper();
+        wrapper2.orderByAsc("create_time");
+        wrapper2.eq("user_id", uid);
+        List<Note> notes = noteMapper.selectList(wrapper2);
         for (int i = 0; i < notes.size(); i++) {
             String nid = notes.get(i).getId();
             QueryWrapper queryWrapper = new QueryWrapper();
@@ -273,7 +274,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         gallery.setPath("");
         gallery.setComponent("NoteView");
         gallery.setType("note");
-        gallery.setInfo("这是一则画廊日志，你可以上传图片，并且为每一个图片添加信息。");
+        gallery.setInfo("这是一则画廊日志，你可以上传图片，并且为每一个图片添加信息,一个Gallery最多保存200张图片。");
         LocalDateTime localDateTime = LocalDateTime.now();
         gallery.setCreateTime(localDateTime);
         String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
@@ -368,7 +369,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         colums.add("people");
         Etable etable = new Etable();
         etable.setViewId(travelTable.getId());
-        etable.setColums(JSON.toJSONString(colums));
+        etable.setColums(colums);
         int save = noteMapper.insert(travelNote);
         int i = viewMapper.insert(travelTable);
         int d = etableMapper.insert(etable);

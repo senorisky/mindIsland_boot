@@ -12,5 +12,6 @@ public class Code {
     public static final Integer OTHER_EVENT_ERROR = 401;
     public static final Integer SUCCESS = 200;
     public static final Integer LOGIN_ERROR = 601;
+    public static final Integer File_Exist = 602;
     public static final Integer SYSTEM_ERROR = 500;
 }

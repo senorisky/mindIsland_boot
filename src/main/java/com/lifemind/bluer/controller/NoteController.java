@@ -8,6 +8,8 @@ import com.lifemind.bluer.entity.Note;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.service.impl.NoteServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -15,8 +17,9 @@ import java.util.List;
 
 /**
  * <p>
- *  前端控制器
+ * 前端控制器
  * </p>
+ * Note  Page
  *
  * @author ckz
  * @since 2022-11-06
@@ -39,6 +42,7 @@ public class NoteController {
         }
     }
 
+
     @RequestMapping("/addNote")//post
     public Result addNote(@RequestBody Note note) {
         boolean save = noteService.save(note);
@@ -49,6 +53,29 @@ public class NoteController {
             HashMap<String, Object> hashMap = new HashMap<>();
             hashMap.put("notes", notes);
             return new Result(hashMap, Code.SUCCESS, "添加成功");
+        } else {
+            return new Result(null, Code.SYSTEM_ERROR, "添加失败");
+        }
+    }
+
+    @Transactional
+    @RequestMapping("/addPage")//post
+    public Result addPage(@RequestBody Note note) {
+        boolean save = noteService.save(note);
+        if (save) {
+            boolean b = noteService.InitDefaultPage(note.getId());
+            if (b) {
+                QueryWrapper wrapper = new QueryWrapper();
+                wrapper.eq("user_id", note.getUserId());
+                List<Note> notes = noteService.list(wrapper);
+                HashMap<String, Object> hashMap = new HashMap<>();
+                hashMap.put("notes", notes);
+                return new Result(hashMap, Code.SUCCESS, "添加成功");
+            } else {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return new Result(null, Code.SYSTEM_ERROR, "添加失败");
+
+            }
         } else {
             return new Result(null, Code.SYSTEM_ERROR, "添加失败");
         }
@@ -86,7 +113,9 @@ public class NoteController {
     public Result getAllNotes(@RequestParam String user_id) {
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("user_id", user_id);
+        wrapper.orderByAsc("create_time");
         List<Note> notes = noteService.list(wrapper);
+        System.out.println(notes);
         if (notes != null) {
             HashMap<String, Object> hashMap = new HashMap<>();
             hashMap.put("notes", notes);
