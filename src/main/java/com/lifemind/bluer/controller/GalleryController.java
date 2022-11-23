@@ -1,6 +1,7 @@
 package com.lifemind.bluer.controller;
 
 
+import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -8,13 +9,20 @@ import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Gallery;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.service.impl.GalleryServiceImpl;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -50,13 +58,22 @@ public class GalleryController {
         return new Result(null, Code.SUCCESS, "图片读取失败");
     }
 
+    @RequestMapping("/downSinglePic")
+    @ResponseBody
+    public void downSinglePic(@RequestParam String userId,
+                              @RequestParam String name,
+                              HttpServletResponse response) {
+        galleryService.downPic(userId, name, response);
+
+    }
+
     @Transactional
     @RequestMapping("/deleteOne")
     @ResponseBody
     public Result deleteOne(@RequestParam String userId,
                             @RequestParam String viewId,
                             @RequestParam String picName) {
-        File pichome = new File("/images/LifeMind/" + userId + "/" + picName);
+        File pichome = new File("/LifeMind/" + userId + "/" + picName);
         boolean exists = pichome.exists();
         System.out.println(picName);
         System.out.println(exists);
@@ -83,12 +100,12 @@ public class GalleryController {
     public Result UpLoadPics(@RequestParam String viewId,
                              @RequestParam String userId,
                              @RequestParam MultipartFile file) {
-        File pichome = new File("/images/LifeMind/" + userId);
+        File pichome = new File("/LifeMind/" + userId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }
         String fileName = file.getOriginalFilename();
-        String filePath = pichome.getAbsolutePath() + "/" +  fileName;
+        String filePath = pichome.getAbsolutePath() + "/" + fileName;
         try {
             System.out.println(filePath);
             //将文件保存指定目录
@@ -97,7 +114,7 @@ public class GalleryController {
                 return new Result(null, Code.File_Exist, "已有同名图片存在");
             }
             file.transferTo(newpic);
-            String fileUrl = "http://localhost:8081/images/LifeMind/" + userId + "/" +  fileName;
+            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
             //存入数据库，
             QueryWrapper wrapper = new QueryWrapper();
             wrapper.eq("view_id", viewId);

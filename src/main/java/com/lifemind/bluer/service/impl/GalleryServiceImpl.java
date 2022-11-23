@@ -10,6 +10,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -45,5 +50,27 @@ public class GalleryServiceImpl extends ServiceImpl<GalleryMapper, Gallery> impl
             return gallery;
         }
         return null;
+    }
+
+    @Override
+    public void downPic(String userId, String name, HttpServletResponse response) {
+        File file = new File("/LifeMind/" + userId + "/" + name);
+        System.out.println(file);
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            ServletOutputStream outputStream = response.getOutputStream();
+            int len = 0;
+            byte[] bytes = new byte[1024];
+            while ((len = fileInputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, len);
+                outputStream.flush();
+            }
+            response.setContentType("image/jpeg");
+            //关闭资源
+            outputStream.close();
+            fileInputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

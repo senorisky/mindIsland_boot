@@ -3,6 +3,8 @@ package com.lifemind.bluer.service;
 import com.lifemind.bluer.entity.Elist;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * <p>
  *  服务类
@@ -13,4 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IElistService extends IService<Elist> {
 
+    void downResource(String userId, String name, HttpServletResponse response);
 }

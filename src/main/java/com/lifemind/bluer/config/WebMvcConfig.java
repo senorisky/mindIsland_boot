@@ -18,16 +18,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
-
     @Value("${file-save-path}")
     private String fileSavePath;
-
     //图片请求路径映射
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/LifeMind/**").addResourceLocations("file:" + fileSavePath);
+        registry.addResourceHandler("/LifeMind/**").addResourceLocations("file:" + fileSavePath);
     }
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor())
@@ -35,7 +32,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 // 那些路径不拦截
                 .excludePathPatterns("/user/login", "/user/regist", "/error");
     }
-
     @Bean
     public BasicInterceptor loginInterceptor() {
         return new BasicInterceptor();

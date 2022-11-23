@@ -74,7 +74,20 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
             gallery.setData(null);
             int insert = galleryMapper.insert(gallery);
             return insert == 1;
-        } else {
+        } else if("videoList".equals(view.getComponent())){
+            Elist elist = new Elist();
+            List<ElistItem> list = new ArrayList<>();
+            ElistItem elistItem = new ElistItem();
+            elistItem.setItems(new ArrayList<>());
+            elistItem.setColum(view.getName());
+            System.out.println(elistItem);
+            list.add(elistItem);
+            elist.setViewId(view.getId());
+            elist.setData(JSON.toJSONString(list));
+            int insert = elistMapper.insert(elist);
+            return insert == 1;
+        }
+        else {
             return false;
         }
     }
