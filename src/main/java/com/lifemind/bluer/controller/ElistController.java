@@ -9,6 +9,7 @@ import com.lifemind.bluer.service.impl.ElistServiceImpl;
 import com.lifemind.bluer.uitls.VideoPoster;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -130,24 +132,60 @@ public class ElistController {
     /**
      * 更新EList的数据
      *
-     * @param elist
+     * @param data
      * @return
      */
+    @Transactional
     @RequestMapping("/saveEList")
     @ResponseBody
-    public Result saveListItems(@RequestBody Elist elist) {
-        System.out.println(elist);
+    public Result saveListItems(@RequestBody Map<String, Object> data) {
+        String elistStr = JSON.toJSONString(data.get("elist"));
+        String url = (String) data.get("url");
+        Elist elist = JSON.parseObject(elistStr, Elist.class);
+        System.out.println(elistStr);
         elist.setData(JSON.toJSONString(elist.getDatas()));
-        System.out.println(elist);
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", elist.getViewId());
         boolean update = elistService.update(elist, wrapper);
         if (!update) {
             return new Result(null, Code.SYSTEM_ERROR, "List更新失败");
         } else {
-            HashMap<String, Object> data = new HashMap<>();
-            data.put("elist", elist);
-            return new Result(data, Code.SUCCESS, "List更新成功");
+            if (!"".equals(url)) {
+                //  System.out.println("带资源");
+                int i = url.indexOf("LifeMind");
+                String path = "D:/" + url.substring(i);
+                File file = new File(path);
+                if (!file.exists()) {
+                    HashMap<String, Object> map = new HashMap<>();
+                    map.put("elist", elist);
+                    return new Result(null, Code.SUCCESS, "资源错误,请联系开发者");
+                }
+                boolean delete = file.delete();
+                if (!delete) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                    return new Result(null, Code.SYSTEM_ERROR, "List更新失败");
+                }
+                String type = url.substring(url.lastIndexOf("."));
+                if (type.equals(".mp4")) {//还要删除封面
+                    String poster = (String) data.get("poster");
+                    int j = poster.indexOf("LifeMind");
+                    String p = "D:/" + poster.substring(j);
+                    File pfile = new File(p);
+                    if (!pfile.exists()) {
+                        HashMap<String, Object> map = new HashMap<>();
+                        map.put("elist", elist);
+                        return new Result(null, Code.SUCCESS, "资源错误,请联系开发者");
+                    }
+                    boolean posterd = pfile.delete();
+                    if (!posterd) {
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                        return new Result(null, Code.SYSTEM_ERROR, "List更新失败");
+                    }
+                }
+            }
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("elist", elist);
+            return new Result(map, Code.SUCCESS, "List更新成功");
         }
     }
 }

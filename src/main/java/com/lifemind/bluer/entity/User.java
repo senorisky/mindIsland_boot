@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author ckz
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @TableId(value = "user_id",type = IdType.INPUT)
+    @TableId(value = "user_id", type = IdType.INPUT)
     private String userId;
 
     private String email;
@@ -29,6 +29,10 @@ public class User implements Serializable {
     private String password;
 
     private String userName;
+
+    private String avatar;
+
+    private String des;
 
     private LocalDateTime createTime;
 
