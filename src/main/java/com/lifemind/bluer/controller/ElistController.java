@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.service.impl.ElistServiceImpl;
+import com.lifemind.bluer.uitls.TokenUtil;
 import com.lifemind.bluer.uitls.VideoPoster;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +42,10 @@ public class ElistController {
      */
     @RequestMapping("/getEList")
     @ResponseBody
-    public Result getEList(@RequestParam String viewId) {
+    public Result getEList(@RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", viewId);
         Elist one = elistService.getOne(wrapper);
@@ -66,59 +70,20 @@ public class ElistController {
             @RequestParam String userId,
             @RequestParam Integer index,
             @RequestParam String elistString,
-            @RequestParam MultipartFile file) {
-        Elist elist = JSON.parseObject(elistString, Elist.class);
-        File pichome = new File("/LifeMind/" + userId);
-        if (!pichome.exists()) {
-            pichome.mkdirs();
+            @RequestParam MultipartFile file, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        String fileName = file.getOriginalFilename();
-        String fileType = file.getContentType();
-        String filePath = pichome.getAbsolutePath() + "\\" + fileName;
-        try {
-            System.out.println("上传的文件" + filePath);
-            //将文件保存指定目录
-            File newpic = new File(filePath);
-            if (newpic.exists()) {
-                return new Result(null, Code.File_Exist, "已有同名文件存在");
-            }
-            file.transferTo(newpic);
-            if (!newpic.exists()) {
-                return new Result(null, Code.File_Exist, "保存失败");
-            }
-            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
-            //保存视频成功 那么就多保存一张封面照片
-            String postUrl = null;
-            if (fileType.contains("video")) {
-                postUrl = VideoPoster.fetchFrame(pichome.getAbsolutePath(), filePath, userId);
-            }
-            //存入数据库，
-            List<ElistItem> datas = elist.getDatas();
-            ElistItem elistItem = datas.get(0);
-            List<JSONObject> items = elistItem.getItems();
-            JSONObject jsonObject = items.get(index);
-            jsonObject.put("url", fileUrl);
-            jsonObject.put("poster", postUrl);
-            items.set(index, jsonObject);
-            elistItem.setItems(items);
-            datas.set(0, elistItem);
-            elist.setDatas(datas);
-            elist.setData(JSON.toJSONString(elist.getDatas()));
-            QueryWrapper wrapper = new QueryWrapper();
-            wrapper.eq("view_id", elist.getViewId());
-            boolean update = elistService.update(elist, wrapper);
-            if (!update) {
-                return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名文件,请修改");
-            } else {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("elist", elist);
-                return new Result(data, Code.SUCCESS, "List更新成功");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
+        Elist update = elistService.UpLoadResource(userId, index, elistString, file);
+        if (update == null) {
+            return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名文件,请修改");
+        } else {
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("elist", update);
+            return new Result(data, Code.SUCCESS, "List更新成功");
         }
     }
+
 
     @RequestMapping("/downSinglePic")
     @ResponseBody
@@ -126,7 +91,6 @@ public class ElistController {
                               @RequestParam String name,
                               HttpServletResponse response) {
         elistService.downResource(userId, name, response);
-
     }
 
     /**
@@ -138,7 +102,10 @@ public class ElistController {
     @Transactional
     @RequestMapping("/saveEList")
     @ResponseBody
-    public Result saveListItems(@RequestBody Map<String, Object> data) {
+    public Result saveListItems(@RequestBody Map<String, Object> data, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         String elistStr = JSON.toJSONString(data.get("elist"));
         String url = (String) data.get("url");
         Elist elist = JSON.parseObject(elistStr, Elist.class);

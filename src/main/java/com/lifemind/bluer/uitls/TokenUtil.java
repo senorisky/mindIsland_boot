@@ -37,6 +37,20 @@ public class TokenUtil {
     }
 
     /**
+     * 销毁Token
+     *
+     * @param key
+     * @return
+     */
+    public static boolean Destroy(String key) {
+        if (tokenMap.containsKey(key)) {
+            User remove = tokenMap.remove(key);
+            return remove != null;
+        }
+        return true;
+    }
+
+    /**
      * 验证token是否合法
      *
      * @param token
@@ -55,5 +69,15 @@ public class TokenUtil {
      */
     public static User getUser(String token) {
         return tokenMap.get(token);
+    }
+
+    /**
+     * 用户信息更改时更新Token绑定的用户
+     *
+     * @param token
+     * @return
+     */
+    public static void changeUser(String token, User user) {
+        tokenMap.put(token, user);
     }
 }

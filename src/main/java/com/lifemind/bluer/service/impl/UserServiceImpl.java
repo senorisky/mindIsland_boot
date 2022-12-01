@@ -1,6 +1,7 @@
 package com.lifemind.bluer.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.entity.Dto.ListData;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 /**
@@ -33,6 +35,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Autowired
     private NoteMapper noteMapper;
+    @Autowired
+    private PageMapper pageMapper;
 
     @Autowired
     private ViewMapper viewMapper;
@@ -77,6 +81,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
+    public boolean deleteUser(String userId) {
+        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper wrapper1 = new QueryWrapper();
+        QueryWrapper wrapper2 = new QueryWrapper();
+        List<String> nids = noteMapper.selectNoteIdListByUid(userId);
+        if (nids.size() > 0) {
+            QueryWrapper wrapper3 = new QueryWrapper();;
+            wrapper3.in("v.note_id", nids);
+            List<String> views = viewMapper.selectViewIdListByNids(wrapper3);
+            System.out.println("查询到views" + views);
+            if (views.size() > 0) {
+                wrapper.in("note_id", nids);
+                wrapper1.in("view_id", views);
+                elistMapper.delete(wrapper1);
+                etableMapper.delete(wrapper1);
+                galleryMapper.delete(wrapper1);
+                int delete = viewMapper.delete(wrapper);
+                pageMapper.delete(wrapper);
+                if (delete < 0)
+                    return false;
+            }
+            wrapper2.eq("user_id", userId);
+            int delete = noteMapper.delete(wrapper2);
+            if (delete < 0)
+                return false;
+        }
+        Integer i = userMapper.deleteById(userId);
+        return i == 1;
+    }
+
+    @Override
     public boolean checkExist(String email) {
         QueryWrapper queryWrapper = new QueryWrapper();
         queryWrapper.eq("email", email);
@@ -96,13 +131,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         f = f && defaultPicNote(user_id);
         f = f && defaultVideoNote(user_id);
         f = f && defaultTravelNote(user_id);
+        f = f && defaultPersonHome(user_id);
         return f;
+    }
+
+    private boolean defaultPersonHome(String user_id) {
+        Note personHome = new Note();
+        personHome.setName("Home");
+        personHome.setFname("");
+        personHome.setId(user_id + "Home");
+        personHome.setType("note");
+        personHome.setIcon("iconfont el-icon-setting");
+        personHome.setInfo("个人中心");
+        personHome.setCreateTime(LocalDateTime.now());
+        personHome.setUserId(user_id);
+        personHome.setComponent("PersonSet");
+        personHome.setPath("");
+        int save = noteMapper.insert(personHome);
+        return save == 1;
     }
 
     private boolean defaultRecipeNote(String user_id) {
         Note RecipeNote = new Note();
         LocalDateTime localDateTime = LocalDateTime.now();
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         RecipeNote.setName("Recipe");
         RecipeNote.setFname("");
         RecipeNote.setId(user_id + "Recipe");
@@ -116,8 +167,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         View recipeList = new View();
         recipeList.setNoteId(RecipeNote.getId());
         recipeList.setFname(RecipeNote.getName());
-        recipeList.setIcon("iconfont el-icon-dian");
-        recipeList.setId(RecipeNote.getId() + s);
+        recipeList.setIcon("iconfont el-icon-dian1");
+        recipeList.setId(RecipeNote.getId() + "recipe");
         recipeList.setInfo("");
         recipeList.setName("List");
         recipeList.setCreateTime(localDateTime);
@@ -125,8 +176,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         recipeList.setPath("");
         recipeList.setType("view");
         ArrayList<ListData> list = new ArrayList<>();
-        ListData item = new ListData();
-        item.setColum("Want to eat");
+        ListData item = new ListData("Want to eat");
         list.add(item);
         String data = JSON.toJSONString(list);
         Elist elist = new Elist();
@@ -141,10 +191,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private boolean defaultDailyNote(String user_id) {
         Note DailyNote = new Note();
         LocalDateTime localDateTime = LocalDateTime.now();
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         DailyNote.setName("Diary");
         DailyNote.setFname("");
-        DailyNote.setId(user_id + "Diary" + s);
+        DailyNote.setId(user_id + "Diary");
         DailyNote.setIcon("iconfont el-icon-miao");
         DailyNote.setInfo("这是一则日记，你可以记录你的美好生活中的点滴。");
         DailyNote.setCreateTime(LocalDateTime.now());
@@ -153,21 +202,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         DailyNote.setPath("");
         DailyNote.setUserId(user_id);
         View dailyList = new View();
-        dailyList.setId(DailyNote.getId() + s);
+        dailyList.setId(DailyNote.getId() + "daily");
         dailyList.setNoteId(DailyNote.getId());
         dailyList.setCreateTime(localDateTime);
         dailyList.setName("DailyList");
         dailyList.setFname(DailyNote.getName());
         dailyList.setPath("");
         dailyList.setInfo("");
-        dailyList.setIcon("iconfont el-icon-dian");
+        dailyList.setIcon("iconfont el-icon-dian1");
         dailyList.setType("view");
         dailyList.setComponent("sListView");
-        ListData listData = new ListData();
-        listData.setColum("daily");
+        ListData listData = new ListData("daily");
         ArrayList<ListData> list = new ArrayList<>();
         list.add(listData);
-        String json = JSON.toJSONString(listData);
+        String json = JSON.toJSONString(list);
         Elist elist = new Elist();
         elist.setViewId(dailyList.getId());
         elist.setData(json);
@@ -180,7 +228,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private boolean defaultWorkNote(String user_id) {
         Note WorkNote = new Note();
         LocalDateTime localDateTime = LocalDateTime.now();
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         WorkNote.setId(user_id + "Task");
         WorkNote.setType("note");
         WorkNote.setIcon("iconfont el-icon-gongzuotai");
@@ -192,10 +239,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         WorkNote.setPath("");
         WorkNote.setUserId(user_id);
         View workList = new View();
-        workList.setId(WorkNote.getId() + s);
+        workList.setId(WorkNote.getId() + "work");
         workList.setNoteId(WorkNote.getId());
         workList.setCreateTime(localDateTime);
-        workList.setIcon("iconfont el-icon-dian");
+        workList.setIcon("iconfont el-icon-dian1");
         workList.setInfo("");
         workList.setCreateTime(localDateTime);
         workList.setFname(WorkNote.getName());
@@ -206,12 +253,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         int save = noteMapper.insert(WorkNote);
         int i = viewMapper.insert(workList);
         ArrayList<ListData> items = new ArrayList<>();
-        ListData listData = new ListData();
-        listData.setColum("Todo");
-        ListData listData2 = new ListData();
-        listData2.setColum("Doing");
-        ListData listData3 = new ListData();
-        listData3.setColum("Done");
+        ListData listData = new ListData("Todo");
+        ListData listData2 = new ListData("Doing");
+        ListData listData3 = new ListData("Done");
         items.add(listData);
         items.add(listData2);
         items.add(listData3);
@@ -225,7 +269,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private boolean defaultReadingNote(String user_id) {
         Note readingNote = new Note();
         LocalDateTime localDateTime = LocalDateTime.now();
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         readingNote.setId(user_id + "Reading");
         readingNote.setType("note");
         readingNote.setIcon("iconfont el-icon-dushu");
@@ -238,23 +281,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         readingNote.setPath("");
         readingNote.setFname("");
         View readList = new View();
-        readList.setId(readingNote.getId() + s);
+        readList.setId(readingNote.getId() + "reading");
         readList.setNoteId(readingNote.getId());
         readList.setCreateTime(localDateTime);
         readList.setType("view");
         readList.setName("readList");
         readList.setInfo("");
         readList.setFname(readingNote.getName());
-        readList.setIcon("iconfont el-icon-dian");
+        readList.setIcon("iconfont el-icon-dian1");
         readList.setPath("");
         readList.setComponent("ListView");
         int save = noteMapper.insert(readingNote);
         int i = viewMapper.insert(readList);
         ArrayList<ListData> list = new ArrayList<>();
-        ListData item = new ListData();
-        item.setColum("Reading");
-        ListData item2 = new ListData();
-        item2.setColum("ReadOver");
+        ListData item = new ListData("Reading");
+        ListData item2 = new ListData("ReadOver");
         list.add(item);
         list.add(item2);
         Elist elist = new Elist();
@@ -276,16 +317,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         gallery.setInfo("这是一则画廊日志，你可以上传图片，并且为每一个图片添加信息,一个Gallery最多保存200张图片。");
         LocalDateTime localDateTime = LocalDateTime.now();
         gallery.setCreateTime(localDateTime);
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         gallery.setId(user_id + "Gallery");
         View galleryTable = new View();
         galleryTable.setNoteId(gallery.getId());
         galleryTable.setPath("");
-        galleryTable.setId(gallery.getId() + s);
+        galleryTable.setId(gallery.getId() + "pictures");
         galleryTable.setInfo("");
         galleryTable.setFname(gallery.getName());
         galleryTable.setCreateTime(localDateTime);
-        galleryTable.setIcon("iconfont el-icon-dian");
+        galleryTable.setIcon("iconfont el-icon-dian1");
         galleryTable.setType("view");
         galleryTable.setName("Gallery");
         galleryTable.setComponent("GalleryView");
@@ -310,21 +350,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         videos.setInfo("这是一个视频集日志，你可以将一些小型视频上传、编写你的感想");
         LocalDateTime localDateTime = LocalDateTime.now();
         videos.setCreateTime(localDateTime);
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         videos.setId(user_id + "Video");
         View videoList = new View();
-        videoList.setId(videos.getId() + s);
+        videoList.setId(videos.getId() + "video");
         videoList.setNoteId(videos.getId());
         videoList.setType("view");
         videoList.setComponent("sListView");
         videoList.setFname(videos.getName());
         videoList.setInfo("");
-        videoList.setIcon("iconfont el-icon-dian");
+        videoList.setIcon("iconfont el-icon-dian1");
         videoList.setCreateTime(localDateTime);
         videoList.setName("videoList");
         videoList.setPath("");
-        ListData item = new ListData();
-        item.setColum("Films");
+        ListData item = new ListData("Films");
         ArrayList<ListData> list = new ArrayList<>();
         list.add(item);
         Elist elist = new Elist();
@@ -348,11 +386,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         travelNote.setInfo("这是一则旅游日志，你可以在这里记录你的每一次旅途，或者添加List来规划你的旅途");
         LocalDateTime localDateTime = LocalDateTime.now();
         travelNote.setCreateTime(localDateTime);
-        String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         travelNote.setId(user_id + "Travel");
         View travelTable = new View();
         travelTable.setNoteId(travelNote.getId());
-        travelTable.setId(travelNote.getId() + s);
+        travelTable.setId(travelNote.getId() + "table");
         travelTable.setInfo("");
         travelTable.setPath("");
         travelTable.setCreateTime(localDateTime);
@@ -360,8 +397,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         travelTable.setType("view");
         travelTable.setFname(travelNote.getName());
         travelTable.setComponent("TableView");
-        travelTable.setIcon("iconfont el-icon-dian");
+        travelTable.setIcon("iconfont el-icon-dian1");
         ArrayList<String> colums = new ArrayList<>();
+        List<JSONObject> data = new ArrayList<>();
         colums.add("name");
         colums.add("time");
         colums.add("place");
@@ -369,7 +407,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         View travelGallery = new View();
         travelGallery.setNoteId(travelNote.getId());
         travelGallery.setPath("");
-        travelGallery.setId(travelNote.getId() + s);
+        travelGallery.setId(travelNote.getId() + "gallery");
         travelGallery.setInfo("");
         travelGallery.setFname(travelNote.getName());
         travelGallery.setCreateTime(localDateTime);
@@ -380,10 +418,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         Etable etable = new Etable();
         etable.setViewId(travelTable.getId());
         etable.setColums(colums);
+        etable.setColum(JSON.toJSONString(colums));
         int save = noteMapper.insert(travelNote);
         int i = viewMapper.insert(travelTable);
         int t = viewMapper.insert(travelGallery);
         int d = etableMapper.insert(etable);
-        return (save == 1 && i == 1 && t == 1&&d==1);
+        return (save == 1 && i == 1 && t == 1 && d == 1);
     }
 }

@@ -2,4 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lifemind.bluer.mapper.ViewMapper">
 
+
+    <select id="selectViewIdByNid" resultType="java.lang.String">
+        select v.id
+        from view v
+        where v.note_id = #{nid}
+    </select>
 </mapper>

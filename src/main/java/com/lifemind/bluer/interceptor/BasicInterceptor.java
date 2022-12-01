@@ -18,8 +18,8 @@ public class BasicInterceptor implements HandlerInterceptor {
     //Controller逻辑执行之前
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String token = request.getHeader("lm-token");
-        System.out.println(token);
+//        String token = request.getHeader("lm-token");
+//        System.out.println(token);
 //        if (!TokenUtil.verify(token)) {
 //            throw new RuntimeException("没有登录");
 //        }

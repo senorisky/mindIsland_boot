@@ -6,14 +6,11 @@ import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.entity.View;
 import com.lifemind.bluer.service.impl.ViewServiceImpl;
+import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -35,7 +32,10 @@ public class ViewController {
     @Transactional
     @RequestMapping("/addView")
     @ResponseBody
-    public Result addView(@RequestBody View view) {
+    public Result addView(@RequestBody View view, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         System.out.println(view);
         view.setCreateTime(LocalDateTime.now());
         boolean save = viewService.save(view);
@@ -54,7 +54,10 @@ public class ViewController {
 
     @RequestMapping("/saveView")
     @ResponseBody
-    public Result saveView(@RequestBody View view) {
+    public Result saveView(@RequestBody View view, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("id", view.getId());
         boolean save = viewService.update(view, wrapper);
@@ -67,13 +70,16 @@ public class ViewController {
 
     @RequestMapping("/deleteView")
     @ResponseBody
-    public Result deleteView(@RequestBody View view) {
+    public Result deleteView(@RequestBody View view, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         QueryWrapper wrapper = new QueryWrapper();
         System.out.println(view);
         wrapper.eq("id", view.getId());
-        boolean save = viewService.remove(wrapper);
-        if (save) {
-            viewService.removeViewData(view);
+        viewService.removeViewData(view);
+        boolean remove = viewService.remove(wrapper);
+        if (remove) {
             return new Result(null, Code.SUCCESS, "删除view成功");
         } else {
             return new Result(null, Code.SYSTEM_ERROR, "删除view失败");

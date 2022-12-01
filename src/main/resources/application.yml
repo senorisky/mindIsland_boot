@@ -9,6 +9,21 @@ spring:
     url: jdbc:mysql://localhost:3306/lifemind?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useAffectedRows=true
     username: root
     password: Zsql2312728
+  mail:
+    # 邮件服务地址，可以配置其他邮箱服务地址，例如：smtp.qq.com
+    default-encoding: UTF-8
+    host: smtp.126.com
+    username: senorisky@126.com
+    password: TRLKAFLLXXMNXZDN
+    properties:
+      mail:
+        smtp:
+          auth: true
+          #如果是用 SSL 方式，需要配置如下属性
+          starttls:
+            enable: true
+            required: true
+    port: 25
 
 mybatis-plus:
   global-config:
@@ -21,7 +36,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     # map ??value?null???
     call-setters-on-nulls: true
-  mapper-locations: classpath*:com/lifemind/mapper/xml/*.xml
+  mapper-locations: classpath*:mapper/xml/*.xml
 
 #  type-aliases-package: com.example.pojo
 server:

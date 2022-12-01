@@ -21,4 +21,6 @@ public interface IUserService extends IService<User> {
     boolean regist(User user);
 
     List<Note> getMenuData(String uid);
+
+    boolean deleteUser(String userId);
 }

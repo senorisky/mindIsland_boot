@@ -9,6 +9,7 @@ import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Gallery;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.service.impl.GalleryServiceImpl;
+import com.lifemind.bluer.uitls.TokenUtil;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,10 @@ public class GalleryController {
 
     @RequestMapping("/getAllpic")
     @ResponseBody
-    public Result getAllpic(@RequestParam String viewId) {
+    public Result getAllpic(@RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", viewId);
         Gallery one = galleryService.getOne(wrapper);
@@ -56,7 +60,7 @@ public class GalleryController {
             data.put("gallery", one);
             return new Result(data, Code.SUCCESS, "图片读取成功");
         }
-        return new Result(null, Code.SUCCESS, "图片读取失败");
+        return new Result(null, Code.SYSTEM_ERROR, "图片读取失败");
     }
 
     @RequestMapping("/downSinglePic")
@@ -73,7 +77,10 @@ public class GalleryController {
     @ResponseBody
     public Result deleteOne(@RequestParam String userId,
                             @RequestParam String viewId,
-                            @RequestParam String picName) {
+                            @RequestParam String picName, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         File pichome = new File("/LifeMind/" + userId + "/" + viewId + "/" + picName);
         boolean exists = pichome.exists();
         System.out.println(picName);
@@ -100,7 +107,10 @@ public class GalleryController {
     @ResponseBody
     public Result UpLoadPics(@RequestParam String viewId,
                              @RequestParam String userId,
-                             @RequestParam MultipartFile file) {
+                             @RequestParam MultipartFile file, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         File pichome = new File("/LifeMind/" + userId + "/" + viewId);
         if (!pichome.exists()) {
             pichome.mkdirs();

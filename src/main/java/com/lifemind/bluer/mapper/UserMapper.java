@@ -22,19 +22,5 @@ import java.util.List;
  */
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
-    @Insert("insert  into user(user_id,email,password,user_name,create_Time,login_Time) " +
-            "values(#{user.userId},#{user.email},#{user.password},#{user.userName},#{user.createTime},#{user.loginTime})")
-    int insertUser(@Param("user") User user);
 
-    @Select("select * from note where note.user_id=#{uid}")
-    List<Note> selectNotes(String uid);
-
-    @Select("select * from etable e where e.note_id=#{nid}")
-    List<Etable> selectTable(String nid);
-
-    @Select("select * from elist e where e.note_id=#{nid}")
-    List<Elist> selectElist(String nid);
-
-    @Select("select * from media_table e where e.note_id=#{nid}")
-    List<Elist> selectMediaTable(String nid);
 }

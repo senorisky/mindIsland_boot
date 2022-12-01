@@ -9,6 +9,7 @@ import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Etable;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.service.impl.EtableServiceImpl;
+import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,10 @@ public class EtableController {
 
     @RequestMapping("/addTable")
     @ResponseBody
-    public Result addNoteTable(@RequestBody Etable table) {
+    public Result addNoteTable(@RequestBody Etable table, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         boolean save = etableService.save(table);
         if (save) {
             HashMap<String, Object> hs = new HashMap<>();
@@ -44,7 +48,10 @@ public class EtableController {
 
     @DeleteMapping("/deleteNoteTable")
     @ResponseBody
-    public Result deleteNoteTable(@RequestParam String etable_id) {
+    public Result deleteNoteTable(@RequestParam String etable_id, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         boolean b = etableService.removeById(etable_id);
         if (b) {
             return new Result(null, Code.SUCCESS, "删除Table成功");
@@ -55,11 +62,13 @@ public class EtableController {
 
     @RequestMapping("/getTable")
     @ResponseBody
-    public Result getTableInfo(@RequestParam String viewId) {
+    public Result getTableInfo(@RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", viewId);
         Etable byId = etableService.getOne(wrapper);
-        System.out.println(byId.getColums());
         List<JSONObject> list = JSON.parseArray(byId.getData(), JSONObject.class);
         List<String> list1 = JSON.parseArray(byId.getColum(), String.class);
         byId.setDatas(list);
@@ -78,7 +87,10 @@ public class EtableController {
 
     @RequestMapping("/addTableColumn")
     @ResponseBody
-    public Result addTableColum(@RequestParam String name, @RequestParam String viewId) {
+    public Result addTableColum(@RequestParam String name, @RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         Etable etable = etableService.addColum(name, viewId);
         if (etable != null) {
             HashMap<String, Object> data = new HashMap<>();
@@ -91,7 +103,10 @@ public class EtableController {
 
     @RequestMapping("/addTableItem")
     @ResponseBody
-    public Result addTableItem(@RequestParam String viewId) {
+    public Result addTableItem(@RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         System.out.println(viewId);
         Etable etable = etableService.addItem(viewId);
         if (etable != null) {
@@ -105,7 +120,10 @@ public class EtableController {
 
     @RequestMapping("/deleteTableItem")
     @ResponseBody
-    public Result deleteTableItem(@RequestParam Integer index, @RequestParam String viewId) {
+    public Result deleteTableItem(@RequestParam Integer index, @RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         Etable etable = etableService.deleteItem(index, viewId);
         if (etable != null) {
             HashMap<String, Object> data = new HashMap<>();
@@ -118,7 +136,10 @@ public class EtableController {
 
     @RequestMapping("/deleteTableColum")
     @ResponseBody
-    public Result deleteTableColum(@RequestParam String name, @RequestParam String viewId) {
+    public Result deleteTableColum(@RequestParam String name, @RequestParam String viewId, @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
         Etable etable = etableService.deleteColum(name, viewId);
         if (etable != null) {
             HashMap<String, Object> data = new HashMap<>();

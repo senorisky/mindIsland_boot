@@ -2,6 +2,7 @@ package com.lifemind.bluer.entity;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.fastjson.JSON;
@@ -30,6 +31,12 @@ public class Etable implements Serializable {
 
     private String viewId;
 
+    public Etable() {
+        datas = new ArrayList<>();
+        datas.add(new JSONObject());
+        data = JSON.toJSONString(datas);
+
+    }
 
     /**
      * table的数据

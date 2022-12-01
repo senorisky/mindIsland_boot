@@ -20,6 +20,11 @@ public class ListData {
     private String colum;
     private ArrayList<String> items;//主要存name info
 
+    public ListData(String colum) {
+        this.colum = colum;
+        items = new ArrayList<>();
+    }
+
     public void addItem(String json) {
         items.add(json);
     }

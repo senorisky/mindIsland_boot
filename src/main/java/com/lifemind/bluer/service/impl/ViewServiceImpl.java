@@ -71,10 +71,9 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
         } else if ("GalleryView".equals(view.getComponent())) {
             Gallery gallery = new Gallery();
             gallery.setViewId(view.getId());
-            gallery.setData(null);
             int insert = galleryMapper.insert(gallery);
             return insert == 1;
-        } else if("videoList".equals(view.getComponent())){
+        } else if ("videoList".equals(view.getComponent())) {
             Elist elist = new Elist();
             List<ElistItem> list = new ArrayList<>();
             ElistItem elistItem = new ElistItem();
@@ -86,8 +85,7 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
             elist.setData(JSON.toJSONString(list));
             int insert = elistMapper.insert(elist);
             return insert == 1;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -96,13 +94,14 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
     public boolean removeViewData(View view) {
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", view.getId());
-        if ("ListView".equals(view.getComponent())) {
+        String c = view.getComponent();
+        if ("ListView".equals(c) || "sListView".equals(c)) {
             int delete = elistMapper.delete(wrapper);
             return delete >= 1;
-        } else if ("TableView".equals(view.getComponent())) {
+        } else if ("TableView".equals(c)) {
             int delete = etableMapper.delete(wrapper);
             return delete >= 1;
-        } else if ("GalleryView".equals(view.getComponent())) {
+        } else if ("GalleryView".equals(c)) {
             int delete = galleryMapper.delete(wrapper);
             return delete >= 1;
         } else {

@@ -2,8 +2,10 @@ package com.lifemind.bluer.entity;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -23,12 +25,16 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class Gallery implements Serializable {
     private static final long serialVersionUID = 1L;
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
+
+    public Gallery() {
+        datas = new ArrayList<>();
+        data = JSON.toJSONString(datas);
+    }
 
     @TableField(exist = false)
     private List<JSONObject> datas;

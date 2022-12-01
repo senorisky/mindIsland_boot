@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.lifemind.bluer.entity.Page;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
 * @author senorisky
 * @description 针对表【page】的数据库操作Mapper
@@ -14,4 +16,5 @@ import org.apache.ibatis.annotations.Mapper;
 public interface PageMapper extends BaseMapper<Page> {
 
 
+    List<String> selectPidList(String userId);
 }
