@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class GalleryController {
     public Result deleteOne(@RequestParam String userId,
                             @RequestParam String viewId,
                             @RequestParam String picName) {
-        File pichome = new File("/LifeMind/" + userId + "/" + picName);
+        File pichome = new File("/LifeMind/" + userId + "/" + viewId + "/" + picName);
         boolean exists = pichome.exists();
         System.out.println(picName);
         System.out.println(exists);
@@ -100,7 +101,7 @@ public class GalleryController {
     public Result UpLoadPics(@RequestParam String viewId,
                              @RequestParam String userId,
                              @RequestParam MultipartFile file) {
-        File pichome = new File("/LifeMind/" + userId);
+        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }
@@ -114,12 +115,15 @@ public class GalleryController {
                 return new Result(null, Code.File_Exist, "已有同名图片存在");
             }
             file.transferTo(newpic);
-            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
+            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
             //存入数据库，
             QueryWrapper wrapper = new QueryWrapper();
             wrapper.eq("view_id", viewId);
             Gallery one = galleryService.getOne(wrapper);
             List<JSONObject> list = JSON.parseArray(one.getData(), JSONObject.class);
+            if (list == null) {
+                list = new ArrayList<>();
+            }
             JSONObject a = new JSONObject();
             a.put("name", fileName);
             a.put("url", fileUrl);

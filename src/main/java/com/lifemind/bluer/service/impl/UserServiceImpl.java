@@ -126,7 +126,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         recipeList.setType("view");
         ArrayList<ListData> list = new ArrayList<>();
         ListData item = new ListData();
-        item.setColum("Recipe");
+        item.setColum("Want to eat");
         list.add(item);
         String data = JSON.toJSONString(list);
         Elist elist = new Elist();
@@ -156,15 +156,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         dailyList.setId(DailyNote.getId() + s);
         dailyList.setNoteId(DailyNote.getId());
         dailyList.setCreateTime(localDateTime);
-        dailyList.setName("workList");
+        dailyList.setName("DailyList");
         dailyList.setFname(DailyNote.getName());
         dailyList.setPath("");
         dailyList.setInfo("");
         dailyList.setIcon("iconfont el-icon-dian");
         dailyList.setType("view");
-        dailyList.setComponent("ListView");
+        dailyList.setComponent("sListView");
         ListData listData = new ListData();
-        listData.setColum("name");
+        listData.setColum("daily");
         ArrayList<ListData> list = new ArrayList<>();
         list.add(listData);
         String json = JSON.toJSONString(listData);
@@ -224,7 +224,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private boolean defaultReadingNote(String user_id) {
         Note readingNote = new Note();
-
         LocalDateTime localDateTime = LocalDateTime.now();
         String s = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         readingNote.setId(user_id + "Reading");
@@ -317,7 +316,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         videoList.setId(videos.getId() + s);
         videoList.setNoteId(videos.getId());
         videoList.setType("view");
-        videoList.setComponent("ListView");
+        videoList.setComponent("sListView");
         videoList.setFname(videos.getName());
         videoList.setInfo("");
         videoList.setIcon("iconfont el-icon-dian");
@@ -367,12 +366,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         colums.add("time");
         colums.add("place");
         colums.add("people");
+        View travelGallery = new View();
+        travelGallery.setNoteId(travelNote.getId());
+        travelGallery.setPath("");
+        travelGallery.setId(travelNote.getId() + s);
+        travelGallery.setInfo("");
+        travelGallery.setFname(travelNote.getName());
+        travelGallery.setCreateTime(localDateTime);
+        travelGallery.setIcon("iconfont el-icon-dian");
+        travelGallery.setType("view");
+        travelGallery.setName("Gallery");
+        travelGallery.setComponent("GalleryView");
         Etable etable = new Etable();
         etable.setViewId(travelTable.getId());
         etable.setColums(colums);
         int save = noteMapper.insert(travelNote);
         int i = viewMapper.insert(travelTable);
+        int t = viewMapper.insert(travelGallery);
         int d = etableMapper.insert(etable);
-        return (save == 1 && i == 1 && d == 1);
+        return (save == 1 && i == 1 && t == 1&&d==1);
     }
 }

@@ -10,4 +10,5 @@ import com.lifemind.bluer.entity.Page;
 */
 public interface PageService extends IService<Page> {
 
+    Page UpdateItemContent(String noteId, String text, Integer index);
 }

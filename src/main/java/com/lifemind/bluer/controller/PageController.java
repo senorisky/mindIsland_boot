@@ -2,17 +2,23 @@ package com.lifemind.bluer.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Dto.PageItem;
+import com.lifemind.bluer.entity.Gallery;
 import com.lifemind.bluer.entity.Page;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.service.impl.PageServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @Classname PageController
@@ -26,15 +32,11 @@ public class PageController {
     @Autowired
     private PageServiceImpl pageService;
 
-    @RequestMapping("/savePageContent")
+    @RequestMapping("/savePageItemContent")
     @ResponseBody
-    public Result savePageContent(@RequestBody Page page) {
-        QueryWrapper wrapper = new QueryWrapper();
-        wrapper.eq("note_id", page.getNoteId());
-        page.setPageContent(JSON.toJSONString(page.getDatas()));
-        System.out.println(page);
-        boolean update = pageService.update(page, wrapper);
-        if (update) {
+    public Result savePageContent(@RequestParam String text, @RequestParam String noteId, @RequestParam Integer index) {
+        Page page = pageService.UpdateItemContent(noteId, text, index);
+        if (page != null) {
             HashMap<String, Object> data = new HashMap<>();
             data.put("page", page);
             return new Result(data, Code.SUCCESS, "保存文章成功");
@@ -83,6 +85,97 @@ public class PageController {
             return new Result(data, Code.SUCCESS, "读取文章成功");
         } else {
             return new Result(null, Code.SYSTEM_ERROR, "读取文章失败");
+        }
+    }
+
+    @RequestMapping("/deletePageItem")
+    @ResponseBody
+    public Result deletePageItem(@RequestParam String noteId, @RequestParam Integer index) {
+        QueryWrapper wrapper = new QueryWrapper();
+        wrapper.eq("note_id", noteId);
+        System.out.println(noteId + index);
+        Page one = pageService.getOne(wrapper);
+        if (one != null) {
+            List<JSONObject> datas = JSON.parseArray(one.getPageContent(), JSONObject.class);
+            datas.remove(index.intValue());//使用remove的时候 按照下标删除  下标不能为integer
+            one.setDatas(datas);
+            one.setPageContent(JSON.toJSONString(datas));
+            boolean update = pageService.update(one, wrapper);
+            if (update) {
+                HashMap<String, Object> data = new HashMap<>();
+                data.put("page", one);
+                return new Result(data, Code.SUCCESS, "读取文章成功");
+            }
+        }
+        return new Result(null, Code.SYSTEM_ERROR, "删除元素失败");
+    }
+
+    @RequestMapping("/upload")
+    @ResponseBody
+    public Result UpLoadPic(@RequestParam String viewId,
+                            @RequestParam String userId,
+                            @RequestParam MultipartFile file) {
+        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
+        if (!pichome.exists()) {
+            pichome.mkdirs();
+        }
+        String fileName = file.getOriginalFilename();
+        try {
+            UUID uuid = UUID.randomUUID();
+            String uid = uuid.toString();
+            fileName = uid + fileName;
+            String filePath = pichome.getAbsolutePath() + "/" + fileName;
+            //将文件保存指定目录
+            File newpic = new File(filePath);
+            if (newpic.exists()) {
+                return new Result(null, Code.File_Exist, "已有同名图片存在");
+            }
+            file.transferTo(newpic);
+            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("name", fileName);
+            data.put("url", fileUrl);
+            return new Result(data, Code.SUCCESS, "上传成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
+        }
+    }
+
+    @RequestMapping("/changePic")
+    @ResponseBody
+    public Result changePic(@RequestParam String viewId,
+                            @RequestParam String userId,
+                            @RequestParam String lastUrl,
+                            @RequestParam MultipartFile file) {
+        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
+        if (!pichome.exists()) {
+            return new Result(null, Code.SYSTEM_ERROR, "系统错误");
+        }
+        String lastName = lastUrl.substring(lastUrl.lastIndexOf("/"));
+        String fileName = file.getOriginalFilename();
+        try {
+            UUID uuid = UUID.randomUUID();
+            String uid = uuid.toString();
+            fileName = uid + fileName;
+            String filePath = pichome.getAbsolutePath() + "/" + fileName;
+            String lastPath = pichome.getAbsolutePath() + "/" + lastName;
+            //将文件保存指定目录
+            File newpic = new File(filePath);
+            File lastPic = new File(lastPath);
+            if (newpic.exists()) {
+                return new Result(null, Code.File_Exist, "已有同名图片存在");
+            }
+            lastPic.deleteOnExit();
+            file.transferTo(newpic);
+            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("name", fileName);
+            data.put("url", fileUrl);
+            return new Result(data, Code.SUCCESS, "上传成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
         }
     }
 }
