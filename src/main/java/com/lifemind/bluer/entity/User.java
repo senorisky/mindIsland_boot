@@ -38,5 +38,6 @@ public class User implements Serializable {
 
     private LocalDateTime loginTime;
 
-
+    private String lock;
+    private String on;
 }
