@@ -5,19 +5,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.entity.Dto.ListData;
-import com.lifemind.bluer.entity.Dto.MenuData;
 import com.lifemind.bluer.mapper.*;
 import com.lifemind.bluer.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lifemind.bluer.uitls.MySecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.WeakHashMap;
 
 /**
  * <p>
@@ -49,9 +47,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private GalleryMapper galleryMapper;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     @Override
     public boolean regist(User user) {
         try {
+            //对前端密码进行解密
+            String p = MySecurityUtil.desEncrypt(user.getPassword());
+            //spring security进行加密
+            String sp = passwordEncoder.encode(p);
+            System.out.println("spring 加密后   " + sp);
+            user.setPassword(sp);
             user.setCreateTime(LocalDateTime.now());
             user.setLock("N");
             int i = userMapper.insert(user);
@@ -89,10 +96,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         List<String> nids = noteMapper.selectNoteIdListByUid(userId);
         if (nids.size() > 0) {
             QueryWrapper wrapper3 = new QueryWrapper();
-            ;
             wrapper3.in("v.note_id", nids);
             List<String> views = viewMapper.selectViewIdListByNids(wrapper3);
-            System.out.println("查询到views" + views);
+//            System.out.println("查询到views" + views);
             if (views.size() > 0) {
                 wrapper.in("note_id", nids);
                 wrapper1.in("view_id", views);

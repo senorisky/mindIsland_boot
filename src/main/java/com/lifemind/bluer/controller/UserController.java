@@ -3,20 +3,19 @@ package com.lifemind.bluer.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lifemind.bluer.entity.*;
-import com.lifemind.bluer.entity.Dto.MenuData;
 import com.lifemind.bluer.service.impl.UserServiceImpl;
 import com.lifemind.bluer.uitls.CheckCodeUtil;
+import com.lifemind.bluer.uitls.MySecurityUtil;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
@@ -25,17 +24,11 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.mail.internet.MimeMessage;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * <p>
@@ -60,6 +53,9 @@ public class UserController {
     @Value("${spring.mail.username}")
     private String from;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     @Transactional
     @PostMapping("/register")
     @ResponseBody
@@ -69,8 +65,9 @@ public class UserController {
         String email = user.getEmail();
         String password = user.getPassword();
         String checkCode = (String) (data.get("CheckCode"));
-        String checkCode1 = (String) session.getAttribute(user.getEmail());
+        String checkCode1 = (String) session.getAttribute(user.getEmail() + "r");
         System.out.println("用户注册\n" + user + "\n" + checkCode1 + checkCode);
+
         if (checkCode1 == null) {
             return new Result(null, Code.SYSTEM_ERROR, "验证码已过期");
         }
@@ -109,15 +106,15 @@ public class UserController {
             String s = CheckCodeUtil.generateVerifyCode(6);
             helper.setTo(email); // 接收地址
             if ("r".equals(type))
-                helper.setSubject("您正在使用邮箱注册LifeMind，若非本人操作请忽略此邮件"); // 标题
+                helper.setSubject("您正在使用邮箱注册MindIsland，若非本人操作请忽略此邮件"); // 标题
             else if ("rs".equals(type)) {
-                helper.setSubject("您正在重置LifeMind密码，若非本人操作请忽略此邮件"); // 标题
+                helper.setSubject("您正在重置MindIsland密码，若非本人操作请忽略此邮件"); // 标题
             } else {
                 return new Result(null, Code.SYSTEM_ERROR, "发送失败");
             }
             Context context = new Context();
             context.setVariable("code", s);
-            session.setAttribute(email, s);
+            session.setAttribute(email + type, s);
             session.setMaxInactiveInterval(300);
             String template = templateEngine.process("emailTmp", context);
             helper.setText(template, true);
@@ -133,7 +130,6 @@ public class UserController {
 
     @RequestMapping("/login")
     @ResponseBody
-
     public Result Login(@RequestBody User user) {
         System.out.println(user);
         String email = user.getEmail();
@@ -141,18 +137,22 @@ public class UserController {
         //判断是否为空
         if (StrUtil.isBlank(email) || StrUtil.isBlank(password))
             return new Result(null, Code.OTHER_EVENT_ERROR, "邮箱或密码不能为空");
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("email", user.getEmail());
         User check;
         try {
             check = userService.getOne(wrapper);
+            String p = MySecurityUtil.desEncrypt(user.getPassword());
             if (check == null) {
                 return new Result(null, Code.USER_EXIST, "用户不存在，请注册");
-            } else if (password.equals(check.getPassword())) {
+            } else {
+                boolean matches = passwordEncoder.matches(p, check.getPassword());
+                if (!matches) {
+                    return new Result(null, Code.LOGIN_ERROR, "密码错误");
+                }
                 if ("Y".equals(check.getLock())) {
                     return new Result(null, Code.SUCCESS, "用户已经被冻结");
                 }
-                check.setOn("Y");
                 check.setLoginTime(LocalDateTime.now());
                 userService.updateById(check);
                 HashMap<String, Object> data = new HashMap<String, Object>();
@@ -166,8 +166,7 @@ public class UserController {
                 List<Note> menuData = userService.getMenuData(check.getUserId());
                 data.put("menuData", menuData);
                 return new Result(data, Code.SUCCESS, "登录成功");
-            } else
-                return new Result(null, Code.LOGIN_ERROR, "密码错误");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new Result(null, Code.SYSTEM_ERROR, "系统错误");
@@ -181,7 +180,7 @@ public class UserController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId);
         User check;
         try {
@@ -211,8 +210,7 @@ public class UserController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", userId);
         wrapper.eq("password", passwd);
         User check;
@@ -256,13 +254,16 @@ public class UserController {
         }
         User user = TokenUtil.getUser(token);
         boolean updatePasswd = false;
-        if (!"".equals(newpass) && newpass != null) {
+        String np = MySecurityUtil.desEncrypt(newpass);
+        String op = MySecurityUtil.desEncrypt(oldpass);
+        if (!"".equals(np) && np != null) {
             User user1 = TokenUtil.getUser(token);
-            QueryWrapper wrapper = new QueryWrapper();
+            QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper.eq("user_id", user1.getUserId());
             User one = userService.getOne(wrapper);
-            if (oldpass.equals(one.getPassword())) {
-                one.setPassword(newpass);
+            boolean a = passwordEncoder.matches(op, one.getPassword());
+            if (a) {
+                one.setPassword(np);
                 updatePasswd = userService.update(one, wrapper);
                 if (!updatePasswd) {
                     return new Result(null, Code.SYSTEM_ERROR, "系统错误");
@@ -270,7 +271,7 @@ public class UserController {
             } else
                 return new Result(null, Code.PASS_WORD_WRONG, "原密码输入错误");
         }
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
         wrapper.eq("user_id", user.getUserId());
         User one = userService.getOne(wrapper);
         if (!"".equals(email) && email != null)
@@ -307,7 +308,6 @@ public class UserController {
 
     @RequestMapping("/header")
     @ResponseBody
-
     public Result UpLoadPics(@RequestParam String userId,
                              @RequestParam MultipartFile file,
                              @RequestHeader(value = "lm-token") String token) {
@@ -330,7 +330,7 @@ public class UserController {
             file.transferTo(newpic);
             String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
             //存入数据库，
-            QueryWrapper wrapper = new QueryWrapper();
+            QueryWrapper<User> wrapper = new QueryWrapper<>();
             wrapper.eq("user_id", userId);
             User one = TokenUtil.getUser(token);
             one.setPassword(null);
@@ -359,22 +359,22 @@ public class UserController {
     @ResponseBody
     public Result resetPw(@RequestParam String checkCode,
                           HttpSession session,
-                          @RequestParam String email, @RequestParam String password) {
-
-        String checkCode1 = (String) session.getAttribute(email);
+                          @RequestParam String type,
+                          @RequestParam String email, @RequestParam(value = "npasswd") String password) {
+        String checkCode1 = (String) session.getAttribute(email + type);
         if (checkCode1 == null) {
             return new Result(null, Code.SUCCESS, "验证码已过期");
         }
         if (!checkCode1.equals(checkCode)) {
             return new Result(null, Code.SUCCESS, "验证码错误");
         }
-        UpdateWrapper wrapper = new UpdateWrapper();
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
         wrapper.eq("email", email);
         wrapper.set("password", password);
         boolean update = userService.update(wrapper);
         if (update) {
-            return new Result(null, Code.SUCCESS, "修改成功");
+            return new Result(null, Code.SUCCESS, "修改成功,即将返回登录");
         }
-        return new Result(null, Code.SUCCESS, "修改失败");
+        return new Result(null, Code.SUCCESS, "修改失败,请稍后再试");
     }
 }
