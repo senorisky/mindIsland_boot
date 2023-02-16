@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.entity.Dto.MenuData;
 import com.lifemind.bluer.service.impl.UserServiceImpl;
@@ -98,7 +99,7 @@ public class UserController {
     }
 
     @RequestMapping("/emailCheck")
-    public Result getCheckCode(@RequestParam(value = "email") String email, HttpSession session) {
+    public Result getCheckCode(@RequestParam(value = "email") String email, @RequestParam(defaultValue = "r") String type, HttpSession session) {
         MimeMessage message = null;
         try {
             message = jms.createMimeMessage();
@@ -107,6 +108,13 @@ public class UserController {
             String s = CheckCodeUtil.generateVerifyCode(6);
             helper.setTo(email); // 接收地址
             helper.setSubject("您正在使用邮箱注册LifeMind，若非本人操作请忽略此邮件"); // 标题
+            if ("r".equals(type))
+                helper.setSubject("您正在使用邮箱注册LifeMind，若非本人操作请忽略此邮件"); // 标题
+            else if ("rs".equals(type)) {
+                helper.setSubject("您正在重置LifeMind密码，若非本人操作请忽略此邮件"); // 标题
+            } else {
+                return new Result(null, Code.SYSTEM_ERROR, "发送失败");
+            }
             Context context = new Context();
             context.setVariable("code", s);
             session.setAttribute(email, s);
@@ -342,4 +350,28 @@ public class UserController {
             return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
         }
     }
+
+    @RequestMapping("/forget")
+    @ResponseBody
+    public Result resetPw(@RequestParam String checkCode,
+                          HttpSession session,
+                          @RequestParam String email, @RequestParam String password) {
+
+        String checkCode1 = (String) session.getAttribute(email);
+        if (checkCode1 == null) {
+            return new Result(null, Code.SUCCESS, "验证码已过期");
+        }
+        if (!checkCode1.equals(checkCode)) {
+            return new Result(null, Code.SUCCESS, "验证码错误");
+        }
+        UpdateWrapper wrapper = new UpdateWrapper();
+        wrapper.eq("email", email);
+        wrapper.set("password", password);
+        boolean update = userService.update(wrapper);
+        if (update) {
+            return new Result(null, Code.SUCCESS, "修改成功");
+        }
+        return new Result(null, Code.SUCCESS, "修改失败");
+    }
+
 }

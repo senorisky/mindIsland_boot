@@ -53,6 +53,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public boolean regist(User user) {
         try {
             user.setCreateTime(LocalDateTime.now());
+            user.setLocked("N");
             int i = userMapper.insert(user);
             if (i <= 0) {
                 return false;
@@ -87,7 +88,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         QueryWrapper wrapper2 = new QueryWrapper();
         List<String> nids = noteMapper.selectNoteIdListByUid(userId);
         if (nids.size() > 0) {
-            QueryWrapper wrapper3 = new QueryWrapper();;
+            QueryWrapper wrapper3 = new QueryWrapper();
+            ;
             wrapper3.in("v.note_id", nids);
             List<String> views = viewMapper.selectViewIdListByNids(wrapper3);
             System.out.println("查询到views" + views);

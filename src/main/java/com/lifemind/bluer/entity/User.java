@@ -38,5 +38,9 @@ public class User implements Serializable {
 
     private LocalDateTime loginTime;
 
+    private String locked;
 
+    private String isOnline;
+
+    private String salt;
 }

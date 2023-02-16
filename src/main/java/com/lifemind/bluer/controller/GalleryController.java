@@ -67,8 +67,13 @@ public class GalleryController {
     @ResponseBody
     public void downSinglePic(@RequestParam String userId,
                               @RequestParam String name,
-                              HttpServletResponse response) {
-        galleryService.downPic(userId, name, response);
+                              @RequestParam String viewId,
+                              HttpServletResponse response,
+                              @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return;
+        }
+        galleryService.downPic(userId, name, viewId, response);
 
     }
 
@@ -103,6 +108,7 @@ public class GalleryController {
 
     }
 
+    @Transactional
     @RequestMapping("/upload")
     @ResponseBody
     public Result UpLoadPics(@RequestParam String viewId,

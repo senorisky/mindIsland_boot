@@ -30,19 +30,25 @@ public class EtableController {
     @Autowired
     private EtableServiceImpl etableService;
 
-    @RequestMapping("/addTable")
+    @RequestMapping("/saveTable")
     @ResponseBody
-    public Result addNoteTable(@RequestBody Etable table, @RequestHeader(value = "lm-token") String token) {
+    public Result saveTable(@RequestBody Etable etable, @RequestHeader(value = "lm-token") String token) {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        boolean save = etableService.save(table);
+        String colum = JSON.toJSONString(etable.getColums());
+        String data = JSON.toJSONString(etable.getDatas());
+        etable.setColum(colum);
+        etable.setData(data);
+        QueryWrapper wrapper = new QueryWrapper();
+        wrapper.eq("view_id", etable.getViewId());
+        boolean save = etableService.update(etable, wrapper);
         if (save) {
             HashMap<String, Object> hs = new HashMap<>();
-            hs.put("etable", table);
-            return new Result(hs, Code.SUCCESS, "添加Table成功");
+            hs.put("etable", etable);
+            return new Result(hs, Code.SUCCESS, "保存表格成功");
         }
-        return new Result(null, Code.SYSTEM_ERROR, "添加Table失败");
+        return new Result(null, Code.SYSTEM_ERROR, "保存表格失败");
     }
 
 

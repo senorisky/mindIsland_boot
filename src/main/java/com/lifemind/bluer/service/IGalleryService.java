@@ -16,5 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 public interface IGalleryService extends IService<Gallery> {
     Gallery deleteOneGalleryPic(String viewId, String name);
 
-    void downPic(String userId, String name, HttpServletResponse response);
+    void downPic(String userId, String name, String viewId, HttpServletResponse response);
+
 }
