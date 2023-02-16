@@ -23,4 +23,6 @@ public interface IUserService extends IService<User> {
     List<Note> getMenuData(String uid);
 
     boolean deleteUser(String userId);
+
+    List<String> getUserPermissions(String principal);
 }

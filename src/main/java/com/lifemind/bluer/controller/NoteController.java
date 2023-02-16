@@ -7,6 +7,7 @@ import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Note;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.entity.User;
+import com.lifemind.bluer.service.INoteService;
 import com.lifemind.bluer.service.impl.NoteServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ import java.util.List;
 @RequestMapping("/note")
 public class NoteController {
     @Autowired
-    private NoteServiceImpl noteService;
+    private INoteService noteService;
 
     @RequestMapping("/saveNote")//post
     public Result saveNote(@RequestBody Note note, @RequestHeader(value = "lm-token") String token) {

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Gallery;
 import com.lifemind.bluer.entity.Result;
+import com.lifemind.bluer.service.IGalleryService;
 import com.lifemind.bluer.service.impl.GalleryServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.apache.ibatis.annotations.Param;
@@ -40,7 +41,7 @@ import java.util.UUID;
 public class GalleryController {
 
     @Autowired
-    private GalleryServiceImpl galleryService;
+    private IGalleryService galleryService;
 
     @RequestMapping("/getAllpic")
     @ResponseBody

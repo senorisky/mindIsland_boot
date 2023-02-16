@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Result;
 import com.lifemind.bluer.entity.View;
+import com.lifemind.bluer.service.IViewService;
 import com.lifemind.bluer.service.impl.ViewServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ import java.time.LocalDateTime;
 public class ViewController {
 
     @Autowired
-    private ViewServiceImpl viewService;
+    private IViewService viewService;
 
     @Transactional
     @RequestMapping("/addView")

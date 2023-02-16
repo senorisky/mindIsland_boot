@@ -9,7 +9,9 @@ import com.lifemind.bluer.entity.Dto.MenuData;
 import com.lifemind.bluer.mapper.*;
 import com.lifemind.bluer.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lifemind.bluer.uitls.MySecurityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -49,11 +51,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private GalleryMapper galleryMapper;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
     @Override
     public boolean regist(User user) {
         try {
+            String dp = MySecurityUtil.desEncrypt(user.getPassword());
+            String encode = passwordEncoder.encode(dp);
+            System.out.println(dp + "\n" + encode);
+            System.out.println(passwordEncoder.matches(dp, encode));
+            user.setPassword(encode);
             user.setCreateTime(LocalDateTime.now());
             user.setLocked("N");
+            user.setIsOnline("N");
             int i = userMapper.insert(user);
             if (i <= 0) {
                 return false;
@@ -111,6 +122,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         Integer i = userMapper.deleteById(userId);
         return i == 1;
+    }
+
+    @Override
+    public List<String> getUserPermissions(String principal) {
+
+        return new ArrayList<>();
     }
 
     @Override

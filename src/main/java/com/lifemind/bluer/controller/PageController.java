@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.entity.Dto.PageItem;
+import com.lifemind.bluer.service.PageService;
 import com.lifemind.bluer.service.impl.PageServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @RequestMapping("/page")
 public class PageController {
     @Autowired
-    private PageServiceImpl pageService;
+    private PageService pageService;
 
     @RequestMapping("/savePageItemContent")
     @ResponseBody

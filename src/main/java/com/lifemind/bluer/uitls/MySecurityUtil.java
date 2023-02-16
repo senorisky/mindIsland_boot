@@ -28,7 +28,7 @@ public class MySecurityUtil {
     public static String desEncrypt(String data) {
         try {
             byte[] encrypted1 = new Base64().decode(data);
-            Cipher cipher = Cipher.getInstance("AES/CBC/PkcsPadding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
             SecretKeySpec keySpec = new SecretKeySpec(KEY.getBytes(), "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes());
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);

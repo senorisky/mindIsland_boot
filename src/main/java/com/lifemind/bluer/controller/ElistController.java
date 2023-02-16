@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lifemind.bluer.entity.*;
+import com.lifemind.bluer.service.IElistService;
 import com.lifemind.bluer.service.impl.ElistServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import com.lifemind.bluer.uitls.VideoPoster;
@@ -33,7 +34,7 @@ import java.util.Map;
 @RequestMapping("/elist")
 public class ElistController {
     @Autowired
-    private ElistServiceImpl elistService;
+    private IElistService elistService;
 
     /**
      * 获得当前EList数据

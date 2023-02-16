@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lifemind.bluer.entity.*;
 import com.lifemind.bluer.entity.Dto.MenuData;
+import com.lifemind.bluer.service.IUserService;
 import com.lifemind.bluer.service.impl.UserServiceImpl;
 import com.lifemind.bluer.uitls.CheckCodeUtil;
+import com.lifemind.bluer.uitls.MySecurityUtil;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +28,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.mail.internet.MimeMessage;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+
 
 /**
  * <p>
@@ -49,13 +50,16 @@ import java.util.Locale;
 @RequestMapping("/user")
 public class UserController {
     @Autowired
-    private UserServiceImpl userService;
+    private IUserService userService;
 
     @Autowired
     private TemplateEngine templateEngine;
 
     @Autowired
     private JavaMailSender jms;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Value("${spring.mail.username}")
     private String from;
@@ -95,7 +99,7 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new Result(null, Code.SYSTEM_ERROR, "系统错误");
+        return new Result(null, Code.SYSTEM_ERROR, "注册失败");
     }
 
     @RequestMapping("/emailCheck")
@@ -107,11 +111,11 @@ public class UserController {
             helper.setFrom(from);
             String s = CheckCodeUtil.generateVerifyCode(6);
             helper.setTo(email); // 接收地址
-            helper.setSubject("您正在使用邮箱注册LifeMind，若非本人操作请忽略此邮件"); // 标题
+            helper.setSubject("您正在使用邮箱注册MindIsland，若非本人操作请忽略此邮件"); // 标题
             if ("r".equals(type))
-                helper.setSubject("您正在使用邮箱注册LifeMind，若非本人操作请忽略此邮件"); // 标题
+                helper.setSubject("您正在使用邮箱注册MindIsland，若非本人操作请忽略此邮件"); // 标题
             else if ("rs".equals(type)) {
-                helper.setSubject("您正在重置LifeMind密码，若非本人操作请忽略此邮件"); // 标题
+                helper.setSubject("您正在重置MindIsland密码，若非本人操作请忽略此邮件"); // 标题
             } else {
                 return new Result(null, Code.SYSTEM_ERROR, "发送失败");
             }
@@ -122,6 +126,7 @@ public class UserController {
             String template = templateEngine.process("emailTmp", context);
             helper.setText(template, true);
             jms.send(message);
+            System.out.println("发送成功");
             return new Result(null, Code.SUCCESS, "发送成功");
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,38 +136,38 @@ public class UserController {
 
     @RequestMapping("/login")
     @ResponseBody
-
-    public Result Login(@RequestBody User user) {
-
-        System.out.println(user);
-        String email = user.getEmail();
-        String password = user.getPassword();
+    public Result Login(@RequestParam String username, @RequestParam String password) {
         //判断是否为空
-        if (StrUtil.isBlank(email) || StrUtil.isBlank(password))
+        if (StrUtil.isBlank(username) || StrUtil.isBlank(password))
             return new Result(null, Code.OTHER_EVENT_ERROR, "邮箱或密码不能为空");
         QueryWrapper wrapper = new QueryWrapper();
-        wrapper.eq("email", user.getEmail());
+        wrapper.eq("email", username);
         User check;
         try {
+            String s = MySecurityUtil.desEncrypt(password);
             check = userService.getOne(wrapper);
             if (check == null) {
                 return new Result(null, Code.USER_EXIST, "用户不存在，请注册");
-            } else if (password.equals(check.getPassword())) {
-                check.setLoginTime(LocalDateTime.now());
-                userService.updateById(check);
-                HashMap<String, Object> data = new HashMap<String, Object>();
-                check.setPassword(null);
-                check.setCreateTime(null);
-                check.setLoginTime(null);
-                String token = TokenUtil.generateToken(check);
-                data.put("user", check);
-                data.put("token", token);
-                System.out.println("登录成功" + token);
-                List<Note> menuData = userService.getMenuData(check.getUserId());
-                data.put("menuData", menuData);
-                return new Result(data, Code.SUCCESS, "登录成功");
-            } else
-                return new Result(null, Code.LOGIN_ERROR, "密码错误");
+            } else {
+                System.out.println(s + "\n" + check.getPassword());
+                boolean matches = passwordEncoder.matches(s, check.getPassword());
+                if (matches) {
+                    check.setLoginTime(LocalDateTime.now());
+                    userService.updateById(check);
+                    HashMap<String, Object> data = new HashMap<String, Object>();
+                    check.setPassword(null);
+                    check.setCreateTime(null);
+                    check.setLoginTime(null);
+                    String token = TokenUtil.generateToken(check);
+                    data.put("user", check);
+                    data.put("token", token);
+                    System.out.println("登录成功" + token);
+                    List<Note> menuData = userService.getMenuData(check.getUserId());
+                    data.put("menuData", menuData);
+                    return new Result(data, Code.SUCCESS, "登录成功");
+                } else
+                    return new Result(null, Code.LOGIN_ERROR, "密码错误");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new Result(null, Code.SYSTEM_ERROR, "系统错误");

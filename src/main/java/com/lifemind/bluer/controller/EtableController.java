@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lifemind.bluer.entity.Code;
 import com.lifemind.bluer.entity.Etable;
 import com.lifemind.bluer.entity.Result;
+import com.lifemind.bluer.service.IEtableService;
 import com.lifemind.bluer.service.impl.EtableServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ import java.util.List;
 @RequestMapping("/etable")
 public class EtableController {
     @Autowired
-    private EtableServiceImpl etableService;
+    private IEtableService etableService;
 
     @RequestMapping("/saveTable")
     @ResponseBody
