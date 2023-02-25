@@ -3,22 +3,19 @@ package com.lifemind.bluer.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.lifemind.bluer.entity.*;
-import com.lifemind.bluer.entity.Dto.MenuData;
 import com.lifemind.bluer.service.IUserService;
-import com.lifemind.bluer.service.impl.UserServiceImpl;
 import com.lifemind.bluer.uitls.CheckCodeUtil;
 import com.lifemind.bluer.uitls.MySecurityUtil;
 import com.lifemind.bluer.uitls.TokenUtil;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -29,6 +26,7 @@ import org.thymeleaf.context.Context;
 
 import javax.mail.internet.MimeMessage;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.io.IOException;
@@ -152,12 +150,16 @@ public class UserController {
                 System.out.println(s + "\n" + check.getPassword());
                 boolean matches = passwordEncoder.matches(s, check.getPassword());
                 if (matches) {
+//                    if ("N".equals(check.getIsOnline())) {
+//                        return new Result(null, Code.LOGIN_ERROR, "已处于登录状态");
+//                    }
                     check.setLoginTime(LocalDateTime.now());
                     userService.updateById(check);
                     HashMap<String, Object> data = new HashMap<String, Object>();
                     check.setPassword(null);
                     check.setCreateTime(null);
                     check.setLoginTime(null);
+//                    check.setIsOnline("Y");
                     String token = TokenUtil.generateToken(check);
                     data.put("user", check);
                     data.put("token", token);
@@ -212,10 +214,10 @@ public class UserController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-
+        String s = MySecurityUtil.desEncrypt(passwd);
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("user_id", userId);
-        wrapper.eq("password", passwd);
+        wrapper.eq("password", s);
         User check;
         try {
             check = userService.getOne(wrapper);
@@ -258,12 +260,14 @@ public class UserController {
         User user = TokenUtil.getUser(token);
         boolean updatePasswd = false;
         if (!"".equals(newpass) && newpass != null) {
+            String s1 = MySecurityUtil.desEncrypt(oldpass);
+            String s2 = MySecurityUtil.desEncrypt(newpass);
             User user1 = TokenUtil.getUser(token);
             QueryWrapper wrapper = new QueryWrapper();
             wrapper.eq("user_id", user1.getUserId());
             User one = userService.getOne(wrapper);
-            if (oldpass.equals(one.getPassword())) {
-                one.setPassword(newpass);
+            if (passwordEncoder.matches(s1, user.getPassword())) {
+                one.setPassword(passwordEncoder.encode(s2));
                 updatePasswd = userService.update(one, wrapper);
                 if (!updatePasswd) {
                     return new Result(null, Code.SYSTEM_ERROR, "系统错误");
@@ -295,6 +299,7 @@ public class UserController {
     }
 
     @RequestMapping("/getuser")
+    @PreAuthorize("isAuthenticated()")
     @ResponseBody
     public Result getUser(@RequestHeader(value = "lm-token") String token) {
         if (!TokenUtil.verify(token)) {
