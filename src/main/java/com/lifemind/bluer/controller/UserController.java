@@ -138,41 +138,50 @@ public class UserController {
         //判断是否为空
         if (StrUtil.isBlank(username) || StrUtil.isBlank(password))
             return new Result(null, Code.OTHER_EVENT_ERROR, "邮箱或密码不能为空");
-        QueryWrapper wrapper = new QueryWrapper();
-        wrapper.eq("email", username);
-        User check;
-        try {
-            String s = MySecurityUtil.desEncrypt(password);
-            check = userService.getOne(wrapper);
-            if (check == null) {
-                return new Result(null, Code.USER_EXIST, "用户不存在，请注册");
-            } else {
-                System.out.println(s + "\n" + check.getPassword());
-                boolean matches = passwordEncoder.matches(s, check.getPassword());
-                if (matches) {
+        if (MySecurityUtil.isLogin()) {
+            // 登陆了打印一下当前用户名
+            System.out.println(MySecurityUtil.getCurrentUsername());
+            return new Result(null, Code.SYSTEM_ERROR, "已登录");
+        } else {
+            QueryWrapper wrapper = new QueryWrapper();
+            wrapper.eq("email", username);
+            User check;
+            try {
+                String s = MySecurityUtil.desEncrypt(password);
+                check = userService.getOne(wrapper);
+                if (check == null) {
+                    return new Result(null, Code.USER_EXIST, "用户不存在，请注册");
+                } else {
+                    System.out.println(s + "\n" + check.getPassword());
+                    boolean matches = passwordEncoder.matches(s, check.getPassword());
+                    if (matches) {
 //                    if ("N".equals(check.getIsOnline())) {
 //                        return new Result(null, Code.LOGIN_ERROR, "已处于登录状态");
 //                    }
-                    check.setLoginTime(LocalDateTime.now());
-                    userService.updateById(check);
-                    HashMap<String, Object> data = new HashMap<String, Object>();
-                    check.setPassword(null);
-                    check.setCreateTime(null);
-                    check.setLoginTime(null);
+                        check.setLoginTime(LocalDateTime.now());
+                        userService.updateById(check);
+                        HashMap<String, Object> data = new HashMap<String, Object>();
+                        check.setPassword(null);
+                        check.setCreateTime(null);
+                        check.setLoginTime(null);
 //                    check.setIsOnline("Y");
-                    String token = TokenUtil.generateToken(check);
-                    data.put("user", check);
-                    data.put("token", token);
-                    System.out.println("登录成功" + token);
-                    List<Note> menuData = userService.getMenuData(check.getUserId());
-                    data.put("menuData", menuData);
-                    return new Result(data, Code.SUCCESS, "登录成功");
-                } else
-                    return new Result(null, Code.LOGIN_ERROR, "密码错误");
+                        String token = TokenUtil.generateToken(check);
+                        data.put("user", check);
+                        data.put("token", token);
+                        System.out.println("登录成功" + token);
+                        List<Note> menuData = userService.getMenuData(check.getUserId());
+                        data.put("menuData", menuData);
+                        // 没登录则进行一次登录
+                        List<String> authorities = new ArrayList<>();
+                        MySecurityUtil.login(username, password, authorities);
+                        return new Result(data, Code.SUCCESS, "登录成功");
+                    } else
+                        return new Result(null, Code.LOGIN_ERROR, "密码错误");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new Result(null, Code.SYSTEM_ERROR, "系统错误");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Result(null, Code.SYSTEM_ERROR, "系统错误");
         }
     }
 
@@ -231,7 +240,7 @@ public class UserController {
             boolean d = userService.deleteUser(userId);
             if (b && d) {
                 //删除资源
-                File home = new File("D:/LifeMind/" + userId);
+                File home = new File("/LifeMind/" + userId);
                 if (home.exists()) {
                     FileUtils.deleteDirectory(home);
                 }
@@ -299,7 +308,6 @@ public class UserController {
     }
 
     @RequestMapping("/getuser")
-    @PreAuthorize("isAuthenticated()")
     @ResponseBody
     public Result getUser(@RequestHeader(value = "lm-token") String token) {
         if (!TokenUtil.verify(token)) {
@@ -313,7 +321,6 @@ public class UserController {
 
     @RequestMapping("/header")
     @ResponseBody
-
     public Result UpLoadPics(@RequestParam String userId,
                              @RequestParam MultipartFile file,
                              @RequestHeader(value = "lm-token") String token) {
@@ -334,7 +341,7 @@ public class UserController {
                 newpic.deleteOnExit();
             }
             file.transferTo(newpic);
-            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
+            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
             //存入数据库，
             QueryWrapper wrapper = new QueryWrapper();
             wrapper.eq("user_id", userId);
@@ -343,7 +350,7 @@ public class UserController {
             //删除之前的头像
             String lastUrl = one.getAvatar();
             if (lastUrl != null) {
-                String lastPath = "D:/" + lastUrl.substring(lastUrl.indexOf("LifeMind"));
+                String lastPath = "/" + lastUrl.substring(lastUrl.indexOf("LifeMind"));
                 File lastHeader = new File(lastPath);
                 lastHeader.deleteOnExit();
             }

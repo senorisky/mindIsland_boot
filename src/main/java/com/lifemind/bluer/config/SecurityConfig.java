@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -27,6 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -62,9 +64,11 @@ public class SecurityConfig {
                 .cors()
                 .and()
                 .authorizeHttpRequests()
-                .anyRequest().permitAll()
-                .and()  // 禁用session (前后端分离项目，不通过Session获取SecurityContext)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                // 放行登录接口
+                .antMatchers("/user/login", "/user/emailCheck").permitAll()
+                .anyRequest().authenticated();
+            /*    .and()  // 禁用session (前后端分离项目，不通过Session获取SecurityContext)
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);*/
         return http.build();
 //                        .formLogin()
 //                .loginPage("/user/login")
