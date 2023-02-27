@@ -132,7 +132,7 @@ public class PageController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId + "/" + viewId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }
@@ -168,7 +168,7 @@ public class PageController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId + "/" + viewId);
         if (!pichome.exists()) {
             return new Result(null, Code.SYSTEM_ERROR, "系统错误");
         }

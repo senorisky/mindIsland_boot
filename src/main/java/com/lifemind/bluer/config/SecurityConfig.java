@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 // 放行登录接口
                 .antMatchers("/user/login", "/user/emailCheck").permitAll()
-                .anyRequest().authenticated();
+                .anyRequest().permitAll();
             /*    .and()  // 禁用session (前后端分离项目，不通过Session获取SecurityContext)
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);*/
         return http.build();

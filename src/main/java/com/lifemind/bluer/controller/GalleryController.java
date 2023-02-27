@@ -85,7 +85,7 @@ public class GalleryController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        File pichome = new File("/LifeMind/" + userId + "/" + viewId + "/" + picName);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId + "/" + viewId + "/" + picName);
         boolean exists = pichome.exists();
         System.out.println(picName);
         System.out.println(exists);
@@ -116,7 +116,7 @@ public class GalleryController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        File pichome = new File("/LifeMind/" + userId + "/" + viewId);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId + "/" + viewId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }

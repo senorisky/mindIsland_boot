@@ -45,9 +45,8 @@ public class EtableServiceImpl extends ServiceImpl<EtableMapper, Etable> impleme
         List<String> colums = JSON.parseArray(etable.getColum(), String.class);
         List<JSONObject> datas = JSON.parseArray(etable.getData(), JSONObject.class);
         etable.setColums(colums);
-        Set<String> keys = datas.get(0).keySet();
         JSONObject a = new JSONObject();
-        for (String key : keys) {
+        for (String key : colums) {
             a.put(key, "");
         }
         datas.add(a);

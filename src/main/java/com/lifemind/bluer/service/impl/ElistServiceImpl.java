@@ -38,7 +38,7 @@ public class ElistServiceImpl extends ServiceImpl<ElistMapper, Elist> implements
 
     @Override
     public void downResource(String userId, String name, HttpServletResponse response) {
-        File file = new File("/LifeMind/" + userId + "/" + name);
+        File file = new File("/www/wwwroot/LifeMind/" + userId + "/" + name);
         System.out.println(file);
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
@@ -61,13 +61,13 @@ public class ElistServiceImpl extends ServiceImpl<ElistMapper, Elist> implements
     @Override
     public Elist UpLoadResource(String userId, Integer index, String elistString, MultipartFile file) {
         Elist elist = JSON.parseObject(elistString, Elist.class);
-        File pichome = new File("/LifeMind/" + userId);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }
         String fileName = file.getOriginalFilename();
         String fileType = file.getContentType();
-        String filePath = pichome.getAbsolutePath() + "\\" + fileName;
+        String filePath = pichome.getAbsolutePath() + "/" + fileName;
         try {
             System.out.println("上传的文件" + filePath);
             //将文件保存指定目录
@@ -79,7 +79,7 @@ public class ElistServiceImpl extends ServiceImpl<ElistMapper, Elist> implements
             if (!newpic.exists()) {
                 return null;
             }
-            String fileUrl = "http://localhost:8081/LifeMind/" + userId + "/" + fileName;
+            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
             //保存视频成功 那么就多保存一张封面照片
             String postUrl = null;
             if (fileType.contains("video")) {

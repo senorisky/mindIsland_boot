@@ -122,7 +122,7 @@ public class ElistController {
             if (!"".equals(url)) {
                 //  System.out.println("带资源");
                 int i = url.indexOf("LifeMind");
-                String path = "/" + url.substring(i);
+                String path = "/www/wwwroot/" + url.substring(i);
                 File file = new File(path);
                 if (!file.exists()) {
                     HashMap<String, Object> map = new HashMap<>();
@@ -138,7 +138,7 @@ public class ElistController {
                 if (type.equals(".mp4")) {//还要删除封面
                     String poster = (String) data.get("poster");
                     int j = poster.indexOf("LifeMind");
-                    String p = "/" + poster.substring(j);
+                    String p = "/www/wwwroot/" + poster.substring(j);
                     File pfile = new File(p);
                     if (!pfile.exists()) {
                         HashMap<String, Object> map = new HashMap<>();

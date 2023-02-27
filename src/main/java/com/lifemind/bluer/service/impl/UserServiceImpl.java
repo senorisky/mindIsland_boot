@@ -444,4 +444,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         int d = etableMapper.insert(etable);
         return (save == 1 && i == 1 && t == 1 && d == 1);
     }
+
 }

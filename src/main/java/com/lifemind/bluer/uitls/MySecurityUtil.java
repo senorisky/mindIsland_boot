@@ -40,6 +40,17 @@ public class MySecurityUtil {
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username, password, authoritiesList);
         SecurityContextHolder.getContext().setAuthentication(token);
         request.getSession().setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
+//        System.out.println("登录，session验证" + HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+    }
+
+    /**
+     * 登录
+     */
+    public static void logout() {
+        HttpServletRequest request = ((ServletRequestAttributes) (RequestContextHolder.currentRequestAttributes())).getRequest();
+        request.getSession().removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        SecurityContextHolder.clearContext();
+//        System.out.println("登出,删除session" + HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
     }
 
     /**

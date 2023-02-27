@@ -53,7 +53,7 @@ public class GalleryServiceImpl extends ServiceImpl<GalleryMapper, Gallery> impl
     }
 
     public void downPic(String userId, String name, String viewId, HttpServletResponse response) {
-        File file = new File("/LifeMind/" + userId + "/" + viewId + "/" + name);
+        File file = new File("/www/wwwroot/LifeMind/" + userId + "/" + viewId + "/" + name);
         System.out.println(file);
         try {
             FileInputStream fileInputStream = new FileInputStream(file);

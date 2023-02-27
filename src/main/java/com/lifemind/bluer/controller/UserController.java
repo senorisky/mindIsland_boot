@@ -102,6 +102,9 @@ public class UserController {
 
     @RequestMapping("/emailCheck")
     public Result getCheckCode(@RequestParam(value = "email") String email, @RequestParam(defaultValue = "r") String type, HttpSession session) {
+        if (userService.checkExist(email) && ("r".equals(type))) {
+            return new Result(null, Code.USER_EXIST, "用户已存在");
+        }
         MimeMessage message = null;
         try {
             message = jms.createMimeMessage();
@@ -126,10 +129,12 @@ public class UserController {
             jms.send(message);
             System.out.println("发送成功");
             return new Result(null, Code.SUCCESS, "发送成功");
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             e.printStackTrace();
             return new Result(null, Code.SYSTEM_ERROR, "发送失败");
         }
+
     }
 
     @RequestMapping("/login")
@@ -198,15 +203,15 @@ public class UserController {
         User check;
         try {
             check = userService.getOne(wrapper);
-
             check.setPassword(null);
             check.setCreateTime(null);
             check.setLoginTime(null);
             boolean b = TokenUtil.Destroy(token);
-            if (b)
+            if (b) {
+                MySecurityUtil.logout();
                 return new Result(null, Code.SUCCESS, "登出成功");
-            else
-                return new Result(null, Code.SYSTEM_ERROR, "登出成失败");
+            } else
+                return new Result(null, Code.SYSTEM_ERROR, "登出失败");
         } catch (Exception e) {
             e.printStackTrace();
             return new Result(null, Code.SYSTEM_ERROR, "系统错误");
@@ -224,13 +229,12 @@ public class UserController {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
         String s = MySecurityUtil.desEncrypt(passwd);
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<User> wrapper = new QueryWrapper<User>();
         wrapper.eq("user_id", userId);
-        wrapper.eq("password", s);
         User check;
         try {
             check = userService.getOne(wrapper);
-            if (check == null) {
+            if (!passwordEncoder.matches(s, check.getPassword())) {
                 return new Result(null, Code.LOGIN_ERROR, "密码错误");
             }
             check.setPassword(null);
@@ -240,7 +244,7 @@ public class UserController {
             boolean d = userService.deleteUser(userId);
             if (b && d) {
                 //删除资源
-                File home = new File("/LifeMind/" + userId);
+                File home = new File("/www/wwwroot/LifeMind/" + userId);
                 if (home.exists()) {
                     FileUtils.deleteDirectory(home);
                 }
@@ -327,7 +331,7 @@ public class UserController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
-        File pichome = new File("/LifeMind/" + userId);
+        File pichome = new File("/www/wwwroot/LifeMind/" + userId);
         if (!pichome.exists()) {
             pichome.mkdirs();
         }
@@ -350,7 +354,7 @@ public class UserController {
             //删除之前的头像
             String lastUrl = one.getAvatar();
             if (lastUrl != null) {
-                String lastPath = "/" + lastUrl.substring(lastUrl.indexOf("LifeMind"));
+                String lastPath = "/www/wwwroot/" + lastUrl.substring(lastUrl.indexOf("LifeMind"));
                 File lastHeader = new File(lastPath);
                 lastHeader.deleteOnExit();
             }
