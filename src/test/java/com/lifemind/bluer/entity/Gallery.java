@@ -1,6 +1,7 @@
 package com.lifemind.bluer.entity;
 
-import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,7 +12,7 @@ import lombok.EqualsAndHashCode;
  * </p>
  *
  * @author ckz
- * @since 2022-11-06
+ * @since 2023-03-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -19,21 +20,11 @@ public class Gallery implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String id;
-
-    private LocalDateTime createTime;
-
-    private String name;
-
-    private String info;
-
-    private String icon;
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
 
     private String viewId;
 
-    /**
-     * list string  图片的路径
-     */
     private String data;
 
 

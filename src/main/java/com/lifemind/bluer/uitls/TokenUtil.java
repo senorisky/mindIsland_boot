@@ -57,7 +57,6 @@ public class TokenUtil {
      * @return
      */
     public static boolean verify(String token) {
-        System.out.println(tokenMap.keySet());
         return tokenMap.containsKey(token);
     }
 

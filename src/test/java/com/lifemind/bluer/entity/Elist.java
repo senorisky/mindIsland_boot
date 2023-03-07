@@ -1,6 +1,7 @@
 package com.lifemind.bluer.entity;
 
-import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,7 +12,7 @@ import lombok.EqualsAndHashCode;
  * </p>
  *
  * @author ckz
- * @since 2022-11-06
+ * @since 2023-03-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -26,13 +27,8 @@ public class Elist implements Serializable {
      */
     private String data;
 
-    private LocalDateTime createTime;
-
-    private String info;
-
-    private String name;
-
-    private String id;
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
 
 
 }

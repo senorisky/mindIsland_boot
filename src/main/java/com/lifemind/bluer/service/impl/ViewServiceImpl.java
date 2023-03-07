@@ -10,9 +10,12 @@ import com.lifemind.bluer.mapper.GalleryMapper;
 import com.lifemind.bluer.mapper.ViewMapper;
 import com.lifemind.bluer.service.IViewService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -91,12 +94,17 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
     }
 
     @Override
-    public boolean removeViewData(View view) {
+    public boolean removeViewData(View view, String userId) throws IOException {
         QueryWrapper wrapper = new QueryWrapper();
         wrapper.eq("view_id", view.getId());
         String c = view.getComponent();
         if ("ListView".equals(c) || "sListView".equals(c)) {
             int delete = elistMapper.delete(wrapper);
+            //删除资源
+            File viewHome = new File("/www/wwwroot/LifeMind/" + userId + "/" + view.getId());
+            if (viewHome.exists()) {
+                FileUtils.deleteDirectory(viewHome);
+            }
             return delete >= 1;
         } else if ("TableView".equals(c)) {
             int delete = etableMapper.delete(wrapper);
@@ -107,5 +115,6 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
         } else {
             return false;
         }
+
     }
 }

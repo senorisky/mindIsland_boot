@@ -59,8 +59,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         try {
             String dp = MySecurityUtil.desEncrypt(user.getPassword());
             String encode = passwordEncoder.encode(dp);
-            System.out.println(dp + "\n" + encode);
-            System.out.println(passwordEncoder.matches(dp, encode));
+//            System.out.println(dp + "\n" + encode);
+//            System.out.println(passwordEncoder.matches(dp, encode));
             user.setPassword(encode);
             user.setCreateTime(LocalDateTime.now());
             user.setLocked("N");

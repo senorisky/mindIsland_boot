@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -141,16 +142,21 @@ public class NoteController {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
         User user = TokenUtil.getUser(token);
-        boolean save = noteService.removeNote(note_id, user.getUserId());
-        if (save) {
-            QueryWrapper wrapper = new QueryWrapper();
-            wrapper.eq("user_id", user.getUserId());
-            wrapper.orderByAsc("create_time");
-            List<Note> notes = noteService.getMenuData(user.getUserId());
-            HashMap<String, Object> hashMap = new HashMap<>();
-            hashMap.put("notes", notes);
-            return new Result(hashMap, Code.SUCCESS, "删除成功");
-        } else {
+        try {
+            boolean save = noteService.removeNote(note_id, user.getUserId());
+            if (save) {
+                QueryWrapper wrapper = new QueryWrapper();
+                wrapper.eq("user_id", user.getUserId());
+                wrapper.orderByAsc("create_time");
+                List<Note> notes = noteService.getMenuData(user.getUserId());
+                HashMap<String, Object> hashMap = new HashMap<>();
+                hashMap.put("notes", notes);
+                return new Result(hashMap, Code.SUCCESS, "删除成功");
+            } else {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return new Result(null, Code.SYSTEM_ERROR, "删除失败");
+            }
+        } catch (IOException e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return new Result(null, Code.SYSTEM_ERROR, "删除失败");
         }

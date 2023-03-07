@@ -39,6 +39,12 @@ public class GalleryServiceImpl extends ServiceImpl<GalleryMapper, Gallery> impl
         List<JSONObject> list = JSON.parseArray(gallery.getData(), JSONObject.class);
         for (int i = 0; i < list.size(); i++) {
             if (list.get(i).get("name").equals(name)) {
+//                删除对应文件图片
+                String url = (String) list.get(i).get("url");
+                String path = "/www/wwwroot/" + url.substring(url.indexOf("LifeMind"));
+                File file = new File(path);
+                if (file.exists())
+                    file.delete();
                 list.remove(i);
                 break;
             }

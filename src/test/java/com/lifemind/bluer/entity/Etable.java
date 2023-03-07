@@ -1,6 +1,7 @@
 package com.lifemind.bluer.entity;
 
-import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,7 +12,7 @@ import lombok.EqualsAndHashCode;
  * </p>
  *
  * @author ckz
- * @since 2022-11-06
+ * @since 2023-03-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -19,18 +20,17 @@ public class Etable implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String id;
-
-    private LocalDateTime createTime;
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
 
     /**
      * table的数据 [{colum1:data1,colum2:data2},......]
      */
     private String data;
 
-    private String colums;
+    private String colum;
 
-    private String info;
+    private String viewId;
 
 
 }

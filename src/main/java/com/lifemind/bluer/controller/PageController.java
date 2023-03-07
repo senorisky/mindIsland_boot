@@ -111,9 +111,14 @@ public class PageController {
         Page one = pageService.getOne(wrapper);
         if (one != null) {
             List<JSONObject> datas = JSON.parseArray(one.getPageContent(), JSONObject.class);
-            datas.remove(index.intValue());//使用remove的时候 按照下标删除  下标不能为i
+            JSONObject remove = datas.remove(index.intValue());//使用remove的时候 按照下标删除  下标不能为i
             one.setDatas(datas);
             one.setPageContent(JSON.toJSONString(datas));
+            String url = (String) remove.get("text");
+            String path = "/www/wwwroot/" + url.substring(url.indexOf("LifeMind"));
+            File file = new File(path);
+            if (file.exists())
+                file.delete();
             boolean update = pageService.update(one, wrapper);
             if (update) {
                 HashMap<String, Object> data = new HashMap<>();

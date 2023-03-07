@@ -10,6 +10,7 @@ import com.lifemind.bluer.service.IUserService;
 import com.lifemind.bluer.uitls.CheckCodeUtil;
 import com.lifemind.bluer.uitls.MySecurityUtil;
 import com.lifemind.bluer.uitls.TokenUtil;
+import org.apache.el.parser.Token;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -338,16 +340,7 @@ public class UserController {
         String fileName = file.getOriginalFilename();
         String filePath = pichome.getAbsolutePath() + "/" + fileName;
         try {
-            System.out.println(filePath);
-            //将文件保存指定目录
-            File newpic = new File(filePath);
-            if (newpic.exists()) {
-                newpic.deleteOnExit();
-            }
-            file.transferTo(newpic);
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
-            //存入数据库，
-            QueryWrapper wrapper = new QueryWrapper();
+            QueryWrapper<User> wrapper = new QueryWrapper<User>();
             wrapper.eq("user_id", userId);
             User one = TokenUtil.getUser(token);
             one.setPassword(null);
@@ -356,16 +349,22 @@ public class UserController {
             if (lastUrl != null) {
                 String lastPath = "/www/wwwroot/" + lastUrl.substring(lastUrl.indexOf("LifeMind"));
                 File lastHeader = new File(lastPath);
-                lastHeader.deleteOnExit();
+                if (lastHeader.exists())
+                    lastHeader.delete();
             }
+            //将文件保存指定目录
+            File newpic = new File(filePath);
+            if (newpic.exists()) {
+                newpic.delete();
+            }
+            file.transferTo(newpic);
+            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
+            //存入数据库，
             one.setAvatar(fileUrl);
-            boolean update = userService.update(one, wrapper);
-            if (update) {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put("user", one);
-                return new Result(data, Code.SUCCESS, "更换头像成功");
-            }
-            return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
+            userService.update(one, wrapper);
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("user", one);
+            return new Result(data, Code.SUCCESS, "更换头像成功");
         } catch (Exception e) {
             e.printStackTrace();
             return new Result(null, Code.SYSTEM_ERROR, "上传失败,可能存在同名图片,请修改");
@@ -393,6 +392,34 @@ public class UserController {
             return new Result(null, Code.SUCCESS, "修改成功");
         }
         return new Result(null, Code.SUCCESS, "修改失败");
+    }
+
+    @RequestMapping("/autoLogin")
+    @ResponseBody
+    public Result autoLogin(@RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
+        if (MySecurityUtil.isLogin()) {
+            // 登陆了打印一下当前用户名
+            String email = MySecurityUtil.getCurrentUsername();
+            QueryWrapper<User> wrapper = new QueryWrapper<>();
+            wrapper.eq("email", email);
+            User one = userService.getOne(wrapper);
+            one.setPassword(null);
+            one.setLoginTime(null);
+            one.setCreateTime(null);
+            HashMap<String, Object> map = new HashMap<>();
+            List<Note> menuData = userService.getMenuData(one.getUserId());
+            token = TokenUtil.generateToken(one);
+            map.put("user", one);
+            map.put("token", token);
+            map.put("menuData", menuData);
+            return new Result(map, Code.SUCCESS, "已登录");
+        } else {
+
+            return new Result(null, Code.SUCCESS, "未登录");
+        }
     }
 
 }

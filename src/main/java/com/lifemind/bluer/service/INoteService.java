@@ -3,6 +3,7 @@ package com.lifemind.bluer.service;
 import com.lifemind.bluer.entity.Note;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
 public interface INoteService extends IService<Note> {
     boolean InitDefaultPage(String nid);
 
-    boolean removeNote(String note_id, String userId);
+    boolean removeNote(String note_id, String userId) throws IOException;
 
     List<Note> getMenuData(String user_id);
 }

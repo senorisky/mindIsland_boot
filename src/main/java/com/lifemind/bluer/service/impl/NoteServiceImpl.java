@@ -10,10 +10,12 @@ import com.lifemind.bluer.entity.View;
 import com.lifemind.bluer.mapper.*;
 import com.lifemind.bluer.service.INoteService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +68,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements IN
     }
 
     @Override
-    public boolean removeNote(String note_id, String userId) {
+    public boolean removeNote(String note_id, String userId) throws IOException {
         QueryWrapper wrapper = new QueryWrapper();
         QueryWrapper wrapper1 = new QueryWrapper();
         QueryWrapper wrapper2 = new QueryWrapper();
@@ -87,6 +89,14 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements IN
                     return false;
             }
             pageMapper.delete(wrapper2);
+            //删除view的所有文件夹
+            for (String i : views) {
+                //删除资源
+                File viewHome = new File("/www/wwwroot/LifeMind/" + userId + "/" + i);
+                if (viewHome.exists()) {
+                    FileUtils.deleteDirectory(viewHome);
+                }
+            }
             System.out.println("deleteNote" + note_id);
             wrapper3.eq("id", note_id);
             int delete = noteMapper.delete(wrapper3);

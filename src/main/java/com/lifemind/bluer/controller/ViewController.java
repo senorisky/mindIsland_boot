@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
@@ -75,10 +76,15 @@ public class ViewController {
         if (!TokenUtil.verify(token)) {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
+        String userId = TokenUtil.getUser(token).getUserId();
         QueryWrapper wrapper = new QueryWrapper();
         System.out.println(view);
         wrapper.eq("id", view.getId());
-        viewService.removeViewData(view);
+        try {
+            viewService.removeViewData(view, userId);
+        } catch (IOException e) {
+            return new Result(null, Code.SYSTEM_ERROR, "删除view失败");
+        }
         boolean remove = viewService.remove(wrapper);
         if (remove) {
             return new Result(null, Code.SUCCESS, "删除view成功");

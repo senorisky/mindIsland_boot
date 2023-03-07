@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  * </p>
  *
  * @author ckz
- * @since 2022-11-06
+ * @since 2023-03-01
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -19,15 +19,15 @@ public class Note implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String noteId;
+    private String id;
 
     private LocalDateTime createTime;
 
-    private String noteInfo;
+    private String info;
 
-    private String noteIcon;
+    private String icon;
 
-    private String noteName;
+    private String name;
 
     private String userId;
 
@@ -38,7 +38,7 @@ public class Note implements Serializable {
 
     private String type;
 
-    private String fatherName;
+    private String fname;
 
     private String component;
 
