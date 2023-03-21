@@ -120,7 +120,7 @@ public class ElistController {
             return new Result(null, Code.SYSTEM_ERROR, "List更新失败");
         } else {
             if (!"".equals(url)) {
-                //  System.out.println("带资源");
+
                 int i = url.indexOf("LifeMind");
                 String path = "/www/wwwroot/" + url.substring(i);
                 File file = new File(path);

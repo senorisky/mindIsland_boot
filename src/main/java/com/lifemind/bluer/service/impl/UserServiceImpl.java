@@ -333,7 +333,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         gallery.setPath("");
         gallery.setComponent("NoteView");
         gallery.setType("note");
-        gallery.setInfo("这是一则画廊日志，你可以上传图片，并且为每一个图片添加信息,一个Gallery最多保存200张图片。");
+        gallery.setInfo("这是一则画廊日志，你可以上传图片，并且为每一个图片添加信息,一个Gallery最多保存50张图片。");
         LocalDateTime localDateTime = LocalDateTime.now();
         gallery.setCreateTime(localDateTime);
         gallery.setId(user_id + "Gallery");

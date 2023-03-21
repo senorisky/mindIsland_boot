@@ -6,10 +6,10 @@ spring:
   #      配置最大的请求数据量 和文件大小
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/lifemind?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useAffectedRows=true
+    url: jdbc:mysql://10.0.4.3:3306/lifemind?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useAffectedRows=true
     username: root
-    password: Zsql2312728
-#    10.0.4.3  Uni1234@4014
+    password: Uni1234@4014
+  #    10.0.4.3  Uni1234@4014
   mail:
     # 邮件服务地址，可以配置其他邮箱服务地址，例如：smtp.qq.com
     default-encoding: UTF-8
