@@ -19,5 +19,7 @@ public interface INoteService extends IService<Note> {
 
     boolean removeNote(String note_id, String userId) throws IOException;
 
+    boolean removePage(String note_id, String userId) throws IOException;
+
     List<Note> getMenuData(String user_id);
 }

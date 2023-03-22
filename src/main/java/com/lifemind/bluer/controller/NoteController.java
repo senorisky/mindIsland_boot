@@ -162,6 +162,34 @@ public class NoteController {
         }
     }
 
+    @Transactional
+    @RequestMapping("/deletePage")
+    public Result deletePage(@RequestParam(value = "noteId") String note_id,
+                             @RequestHeader(value = "lm-token") String token) {
+        if (!TokenUtil.verify(token)) {
+            return new Result(null, Code.SYSTEM_ERROR, "未登录");
+        }
+        User user = TokenUtil.getUser(token);
+        try {
+            boolean save = noteService.removePage(note_id, user.getUserId());
+            if (save) {
+                QueryWrapper wrapper = new QueryWrapper();
+                wrapper.eq("user_id", user.getUserId());
+                wrapper.orderByAsc("create_time");
+                List<Note> notes = noteService.getMenuData(user.getUserId());
+                HashMap<String, Object> hashMap = new HashMap<>();
+                hashMap.put("notes", notes);
+                return new Result(hashMap, Code.SUCCESS, "删除成功");
+            } else {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                return new Result(null, Code.SYSTEM_ERROR, "删除失败");
+            }
+        } catch (IOException e) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return new Result(null, Code.SYSTEM_ERROR, "删除失败");
+        }
+    }
+
     @RequestMapping("/getAll")
     public Result getAllNotes(@RequestParam String user_id, @RequestHeader(value = "lm-token") String token) {
         if (!TokenUtil.verify(token)) {

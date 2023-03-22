@@ -101,10 +101,6 @@ public class ViewServiceImpl extends ServiceImpl<ViewMapper, View> implements IV
         if ("ListView".equals(c) || "sListView".equals(c)) {
             int delete = elistMapper.delete(wrapper);
             //删除资源
-            File viewHome = new File("/www/wwwroot/LifeMind/" + userId + "/" + view.getId());
-            if (viewHome.exists()) {
-                FileUtils.deleteDirectory(viewHome);
-            }
             return delete >= 1;
         } else if ("TableView".equals(c)) {
             int delete = etableMapper.delete(wrapper);

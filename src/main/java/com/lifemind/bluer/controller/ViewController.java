@@ -8,11 +8,13 @@ import com.lifemind.bluer.entity.View;
 import com.lifemind.bluer.service.IViewService;
 import com.lifemind.bluer.service.impl.ViewServiceImpl;
 import com.lifemind.bluer.uitls.TokenUtil;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -77,11 +79,17 @@ public class ViewController {
             return new Result(null, Code.SYSTEM_ERROR, "未登录");
         }
         String userId = TokenUtil.getUser(token).getUserId();
-        QueryWrapper wrapper = new QueryWrapper();
+        QueryWrapper<View> wrapper = new QueryWrapper<>();
         System.out.println(view);
         wrapper.eq("id", view.getId());
         try {
-            viewService.removeViewData(view, userId);
+            if (viewService.removeViewData(view, userId)) {
+                File viewHome = new File("/www/wwwroot/LifeMind/" + userId + "/" + view.getId());
+                System.out.println("删除view" + viewHome.getAbsolutePath());
+                if (viewHome.exists()) {
+                    FileUtils.deleteDirectory(viewHome);
+                }
+            }
         } catch (IOException e) {
             return new Result(null, Code.SYSTEM_ERROR, "删除view失败");
         }

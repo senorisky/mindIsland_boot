@@ -107,6 +107,43 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements IN
     }
 
     @Override
+    public boolean removePage(String note_id, String userId) throws IOException {
+
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq("user_id", userId);
+        User user = userMapper.selectOne(wrapper);
+        if (user != null) {
+            //先删除Page数据库中的数据
+            QueryWrapper<Page> wrapper1 = new QueryWrapper<>();
+            wrapper1.eq("note_id", note_id);
+            int delete = pageMapper.delete(wrapper1);
+            if (delete == 1) {
+                QueryWrapper<Note> wrapper2 = new QueryWrapper<>();
+                //再删除Note中的page信息
+                wrapper2.clear();
+                wrapper2.eq("id", note_id);
+                wrapper2.eq("type", "page");
+                wrapper2.eq("user_id", userId);
+                int delete1 = noteMapper.delete(wrapper2);
+                if (delete1 == 1) {
+                    //最后删除文件
+                    File pageHome = new File("/www/wwwroot/LifeMind/" + userId + "/" + note_id);
+                    if (pageHome.exists()) {
+                        pageHome.delete();
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public List<Note> getMenuData(String uid) {
         QueryWrapper wrapper2 = new QueryWrapper();
         wrapper2.orderByAsc("create_time");
