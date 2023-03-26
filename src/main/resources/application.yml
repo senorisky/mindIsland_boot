@@ -6,16 +6,16 @@ spring:
   #      配置最大的请求数据量 和文件大小
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://10.0.4.3:3306/lifemind?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useAffectedRows=true
-    username: root
-    password: Uni1234@4014
-  #    10.0.4.3  Uni1234@4014
+    url: *
+    username: *
+    password: *
+
   mail:
     # 邮件服务地址，可以配置其他邮箱服务地址，例如：smtp.qq.com
     default-encoding: UTF-8
-    host: smtp.126.com
-    username: senorisky@126.com
-    password: RPEPHEVPRVDPCWBB
+    host: *
+    username: *
+    password:*
     properties:
       mail:
         smtp:
@@ -41,5 +41,5 @@ mybatis-plus:
 
 #  type-aliases-package: com.example.pojo
 server:
-  port: 8081
-file-save-path: /www/wwwroot/LifeMind/
+  port: *
+file-save-path: *
