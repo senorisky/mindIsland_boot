@@ -358,7 +358,7 @@ public class UserController {
                 newpic.delete();
             }
             file.transferTo(newpic);
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
+            String fileUrl = "http://*" + userId + "/" + fileName;
             //存入数据库，
             one.setAvatar(fileUrl);
             userService.update(one, wrapper);

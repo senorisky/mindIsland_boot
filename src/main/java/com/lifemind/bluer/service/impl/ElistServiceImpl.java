@@ -79,7 +79,7 @@ public class ElistServiceImpl extends ServiceImpl<ElistMapper, Elist> implements
             if (!newpic.exists()) {
                 return null;
             }
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + fileName;
+            String fileUrl = "http://*" + userId + "/" + fileName;
             //保存视频成功 那么就多保存一张封面照片
             String postUrl = null;
             if (fileType.contains("video")) {

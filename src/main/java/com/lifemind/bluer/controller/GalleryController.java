@@ -130,7 +130,7 @@ public class GalleryController {
                 return new Result(null, Code.File_Exist, "已有同名图片存在");
             }
             file.transferTo(newpic);
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
+            String fileUrl = "http://*" + userId + "/" + viewId + "/" + fileName;
             //存入数据库，
             QueryWrapper wrapper = new QueryWrapper();
             wrapper.eq("view_id", viewId);

@@ -153,7 +153,7 @@ public class PageController {
                 return new Result(null, Code.File_Exist, "已有同名图片存在");
             }
             file.transferTo(newpic);
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
+            String fileUrl = "http://*" + userId + "/" + viewId + "/" + fileName;
             HashMap<String, Object> data = new HashMap<>();
             data.put("name", fileName);
             data.put("url", fileUrl);
@@ -193,7 +193,7 @@ public class PageController {
             }
             lastPic.deleteOnExit();
             file.transferTo(newpic);
-            String fileUrl = "http://49.234.58.186:8081/LifeMind/" + userId + "/" + viewId + "/" + fileName;
+            String fileUrl = "http://*" + userId + "/" + viewId + "/" + fileName;
             HashMap<String, Object> data = new HashMap<>();
             data.put("name", fileName);
             data.put("url", fileUrl);
